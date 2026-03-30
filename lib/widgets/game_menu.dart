@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ds_frontend/screens/profile_screen.dart';
 import 'package:ds_frontend/screens/shop_screen.dart';
+import 'package:ds_frontend/screens/map_screen.dart';
 
 class GameMenu extends StatelessWidget {
   const GameMenu({super.key});
@@ -32,7 +33,7 @@ class GameMenu extends StatelessWidget {
               children: [
                 _buildMenuItem(context, 'PROFIL', Icons.person, isReady: true),
                 _buildMenuItem(context, 'OBCHOD', Icons.store, isReady: true),
-                _buildMenuItem(context, 'MAPA', Icons.map),
+                _buildMenuItem(context, 'MAPA', Icons.map, isReady: true),
                 _buildMenuItem(context, 'ÚKOLY', Icons.assignment),
                 _buildMenuItem(context, 'SCHOPNOSTI', Icons.star),
                 _buildMenuItem(context, 'DRUŽINA', Icons.group),
@@ -66,6 +67,8 @@ class GameMenu extends StatelessWidget {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
           } else if (title == 'OBCHOD') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
+          } else if (title == 'MAPA') {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MapScreen())); // Nový přesun!
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -263,8 +263,56 @@ class ApiService {
     }
   }
 
+// ==========================================
+  // --- LOKACE A DUNGEONY ---
+  // ==========================================
 
+  // Stažení detailů konkrétního dungeonu podle ID
+  Future<Map<String, dynamic>?> getDungeonDetails(int dungeonId) async {
+    final token = await getToken();
+    if (token == null) return null;
 
+    // Tento endpoint v Djangu pak připravíš tak, aby vracel detaily (název, pozadí, dropy)
+    final url = Uri.parse('$baseUrl/dungeon/$dungeonId/'); 
+    
+    try {
+      final response = await http.get(url, headers: {'Authorization': 'Token $token'});
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body); 
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Chyba při načítání dungeonu: $e');
+      return null;
+    }
+  }
+
+// --- INICIALIZACE SOUBOJE ---
+  Future<bool> initFight(int dungeonBaseId) async {
+    final token = await getToken();
+    if (token == null) return false;
+
+    final url = Uri.parse('$baseUrl/init_fight/');
+    
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json', 
+          'Authorization': 'Token $token' // Zde tě backend identifikuje
+        },
+        body: jsonEncode({
+          'dungeon_base_id': dungeonBaseId
+        }),
+      );
+      
+      // Předpokládáme, že úspěšná inicializace vrátí kód 200 (OK)
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Chyba při inicializaci souboje: $e');
+      return false;
+    }
+  }
 
 
 }
