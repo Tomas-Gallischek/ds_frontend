@@ -183,7 +183,85 @@ class ApiService {
     }
   }
 
+// ==========================================
+  // --- OBCHOD A INVENTÁŘ ---
+  // ==========================================
 
+  // 1. Načtení nabídky obchodu
+  Future<List<dynamic>?> getShopItems() async {
+    final token = await getToken();
+    if (token == null) return null;
+
+    final url = Uri.parse('$baseUrl/shop/'); // Z tvého shop_screen.py
+    
+    try {
+      final response = await http.get(url, headers: {'Authorization': 'Token $token'});
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['items_in_shop']; // Odpovídá úpravě ve tvém Python kódu
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Chyba při načítání obchodu: $e');
+      return null;
+    }
+  }
+
+  // 2. Nákup předmětu
+  Future<bool> buyItem(int itemId, String itemName, dynamic itemPrice) async {
+    final token = await getToken();
+    if (token == null) return false;
+
+    final url = Uri.parse('$baseUrl/shop_buy/');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Token $token'},
+        body: jsonEncode({'item_id': itemId, 'item_name': itemName, 'item_price': itemPrice}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+// Změněno: Přidán parametr int amount
+  Future<bool> sellItem(int itemId, String itemName, dynamic itemPrice, int amount) async {
+    final token = await getToken();
+    if (token == null) return false;
+
+    final url = Uri.parse('$baseUrl/sell_item/');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Token $token'},
+        body: jsonEncode({
+          'item_id': itemId, 
+          'item_name': itemName, 
+          'item_price': itemPrice,
+          'amount': amount // ZMĚNĚNO: Posíláme množství
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // 4. Obnova (Refresh) obchodu za goldy
+  Future<bool> refreshShop() async {
+    final token = await getToken();
+    if (token == null) return false;
+
+    final url = Uri.parse('$baseUrl/shop_refresh/');
+    try {
+      // Refresh u tebe nepotřebuje posílat tělo (body), jen prázdný POST
+      final response = await http.post(url, headers: {'Authorization': 'Token $token'});
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 
 
 

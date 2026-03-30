@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ds_frontend/services/api_service.dart';
 import 'dart:async';
+import 'package:ds_frontend/widgets/game_menu.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -151,13 +152,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Hrdiny'),
         centerTitle: true,
+        // Nastavení vlastních prvků napravo v liště
+        actions: [
+          // Používáme Builder, abychom získali správný "kontext" pro otevření menu.
+          // Bez Builderu by aplikace nevěděla, který Scaffold má otevřít.
+          Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+                child: const Text(
+                  'MENU',
+                  style: TextStyle(
+                    color: Colors.black, // Uprav na barvu, která sedí tvému tématu
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }
+          ),
+        ],
       ),
+      // Tímto napojíme náš vytvořený widget jako menu, které vyjíždí zprava
+      endDrawer: const GameMenu(), 
       body: _buildBody(),
     );
   }
@@ -189,6 +212,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                // --- NOVÝ PROFILOVÝ OBRÁZEK ---
+                CircleAvatar(
+                  radius: 50, // Nastavuje velikost kruhu (poloměr)
+                  backgroundColor: Colors.grey.shade300, // Barva pozadí, kdyby se obrázek nenačetl
+                  // Dynamicky načteme obrázek podle stringu z backendu.
+                  // Předpokládá se, že obrázky jsou ve složce assets/ a jsou ve formátu .png
+                  backgroundImage: AssetImage('assets/${_profileData!['avatar_img_ozn']}.png'),
+                ),
+                const SizedBox(height: 16), // Mezera mezi obrázkem a jménem
+                
+                // --- PŮVODNÍ JMÉNO A STATISTIKY ---
                 Text(
                   _profileData!['username'],
                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
@@ -201,6 +235,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'XP: ${_profileData!['xp']}',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Role: ${_profileData!['role']}',
                   style: const TextStyle(fontSize: 16),
                 ),
               ],
