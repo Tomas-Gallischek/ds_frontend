@@ -302,9 +302,11 @@ class ApiService {
           'Authorization': 'Token $token' // Zde tě backend identifikuje
         },
         body: jsonEncode({
-          'init_base_id': baseId,
+          // POZOR: Tento klíč se musí přesně shodovat s request.data.get('...') v Djangu!
+          // Pokud Django čeká 'dungeon_base_id', změň to tady. 
+          'init_base_id': baseId, 
           'fight_type': fightType,
-          'fight_time': fightTime // Přidáno: Posíláme i čas souboje
+          'fight_time': fightTime // Počet minut, které si hráč navolil na posuvníku
         }),
       );
       
