@@ -35,10 +35,6 @@ class _DungeonScreenState extends State<DungeonScreen> {
     });
   }
 
-  // ==================================================================
-  // ZDE JE OPRAVA: Funkce _startFight je nyní správně umístěna 
-  // v těle třídy, mimo metodu build().
-  // ==================================================================
   Future<void> _startFight() async {
     // Bezpečnostní kontrola, jestli máme data a v nich hledané ID
     int? baseId = _dungeonData?['dungeon_base_id'];
@@ -53,7 +49,7 @@ class _DungeonScreenState extends State<DungeonScreen> {
     setState(() => _isStartingFight = true);
 
     // Zavoláme backend
-    final success = await _apiService.initFight(baseId);
+    final success = await _apiService.initFight(baseId, "dungeon", 2); // POSLEDNÍ ARGUMENT SI PAK BUDE VYBÍRAT HRÁČ, JE TO ČAS SOUBOJE V MINUTÁCH
 
     // Nyní je 'mounted' kontrola naprosto bezpečná
     if (!mounted) return;

@@ -288,7 +288,7 @@ class ApiService {
   }
 
 // --- INICIALIZACE SOUBOJE ---
-  Future<bool> initFight(int dungeonBaseId) async {
+  Future<bool> initFight(int baseId, String fightType, int fightTime) async {
     final token = await getToken();
     if (token == null) return false;
 
@@ -302,7 +302,9 @@ class ApiService {
           'Authorization': 'Token $token' // Zde tě backend identifikuje
         },
         body: jsonEncode({
-          'dungeon_base_id': dungeonBaseId
+          'init_base_id': baseId,
+          'fight_type': fightType,
+          'fight_time': fightTime // Přidáno: Posíláme i čas souboje
         }),
       );
       
