@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ds_frontend/services/api_service.dart';
+import 'package:ds_frontend/screens/fight_screen.dart';
 
 class DungeonScreen extends StatefulWidget {
   final int dungeonId;
@@ -65,16 +66,18 @@ class _DungeonScreenState extends State<DungeonScreen> {
 
     // 2) Odeslání API s navolenou hodnotou jako 3. argumentem
     // Předpokládám, že tvůj ApiService už tuto změnu v podpisu funkce přijal
-    final success = await _apiService.initFight(baseId, "dungeon", _selectedMinutes.toInt());
+// V dungeon_screen.dart:
+    final turnLogs = await _apiService.initFight(baseId, "dungeon", _selectedMinutes.toInt());
 
     if (!mounted) return;
     setState(() => _isStartingFight = false);
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Průzkum zahájen!'), backgroundColor: Colors.green),
+    if (turnLogs != null && turnLogs.isNotEmpty) {
+      // SOUBOJ ÚSPĚŠNÝ, MÁME DATA - JEDEME ANIMOVAT!
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FightScreen(turnLogs: turnLogs)),
       );
-      // Tady později Navigator.push na soubojovou obrazovku
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Chyba při zahájení souboje.'), backgroundColor: Colors.red),

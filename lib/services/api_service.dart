@@ -287,10 +287,10 @@ class ApiService {
     }
   }
 
-// --- INICIALIZACE SOUBOJE ---
-  Future<bool> initFight(int baseId, String fightType, int fightTime) async {
+// Místo Future<bool> teď bude vracet Future<List<dynamic>?>
+  Future<List<dynamic>?> initFight(int baseId, String fightType, int fightTime) async {
     final token = await getToken();
-    if (token == null) return false;
+    if (token == null) return null;
 
     final url = Uri.parse('$baseUrl/init_fight/');
     
@@ -299,22 +299,25 @@ class ApiService {
         url,
         headers: {
           'Content-Type': 'application/json', 
-          'Authorization': 'Token $token' // Zde tě backend identifikuje
+          'Authorization': 'Token $token'
         },
         body: jsonEncode({
-          // POZOR: Tento klíč se musí přesně shodovat s request.data.get('...') v Djangu!
-          // Pokud Django čeká 'dungeon_base_id', změň to tady. 
-          'init_base_id': baseId, 
+          'init_base_id': baseId,
           'fight_type': fightType,
-          'fight_time': fightTime // Počet minut, které si hráč navolil na posuvníku
+          'fight_time': fightTime
         }),
       );
       
-      // Předpokládáme, že úspěšná inicializace vrátí kód 200 (OK)
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Předpokládám, že backend to vrací např. pod klíčem 'turn_logs'
+        // Pokud to posíláš jen rovnou jako List v těle, použij prostě return data;
+        return data['turn_logs']; 
+      }
+      return null;
     } catch (e) {
       debugPrint('Chyba při inicializaci souboje: $e');
-      return false;
+      return null;
     }
   }
 
