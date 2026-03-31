@@ -327,7 +327,7 @@ void _animateAttack({required bool isPlayer}) {
                                 duration: const Duration(milliseconds: 100),
                                 transform: Matrix4.translationValues(_playerOffset, 0, 0),
                                 child: Image.asset(
-                                  'assets/$_playerImg.png',
+                                  'assets/profile/$_playerImg.png',
                                   width: 140,
                                   height: 140,
                                   errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 140, color: Colors.blueAccent),
@@ -350,7 +350,7 @@ void _animateAttack({required bool isPlayer}) {
                                 duration: const Duration(milliseconds: 100),
                                 transform: Matrix4.translationValues(_enemyOffset, 0, 0),
                                 child: Image.asset(
-                                  'assets/$_enemyImg.png',
+                                  'assets/enemies/mobs/$_enemyImg.png',
                                   width: 140,
                                   height: 140,
                                   errorBuilder: (context, error, stackTrace) => const Icon(Icons.pest_control, size: 140, color: Colors.redAccent),

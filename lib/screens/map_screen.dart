@@ -34,7 +34,7 @@ child: Stack(
           children: [
             // 1. VRSTVA: Samotné pozadí mapy (tvůj oceán)
             Image.asset(
-              'assets/map_background.png',
+              'assets/maps/map_background.png',
               fit: BoxFit.none, 
             ),
             

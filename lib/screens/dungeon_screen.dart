@@ -172,7 +172,7 @@ class _DungeonScreenState extends State<DungeonScreen> {
         children: [
           // Pozadí
           Image.asset(
-            'assets/$bgImageName.png',
+            'assets/bg/dungeons/$bgImageName.png',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey.shade900),
           ),

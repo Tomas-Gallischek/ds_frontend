@@ -245,7 +245,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
   Widget _buildItemIcon(String imgName) {
     return ClipOval(
       child: Image.asset(
-        'assets/$imgName.png',
+        'assets/items/$imgName.png',
         width: 48,
         height: 48,
         fit: BoxFit.cover,

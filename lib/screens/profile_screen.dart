@@ -217,8 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   radius: 50, // Nastavuje velikost kruhu (poloměr)
                   backgroundColor: Colors.grey.shade300, // Barva pozadí, kdyby se obrázek nenačetl
                   // Dynamicky načteme obrázek podle stringu z backendu.
-                  // Předpokládá se, že obrázky jsou ve složce assets/ a jsou ve formátu .png
-                  backgroundImage: AssetImage('assets/${_profileData!['avatar_img_ozn']}.png'),
+                  backgroundImage: AssetImage('assets/profile/${_profileData!['avatar_img_ozn']}.png'),
                 ),
                 const SizedBox(height: 16), // Mezera mezi obrázkem a jménem
                 
