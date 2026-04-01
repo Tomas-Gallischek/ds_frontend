@@ -296,6 +296,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
 
+  // Pomocný widget pro vykreslení ikonky itemu
+  Widget _buildItemIcon(String imgName) {
+    return ClipOval(
+      child: Image.asset(
+        'assets/items/$imgName.png', // Ujisti se, že nemáš v databázi uloženo ".png" přímo v názvu, jinak umaž '.png' zde
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 48, 
+          height: 48, 
+          color: Colors.grey.shade300,
+          child: const Icon(Icons.broken_image, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+
 // Vykreslení věcí, které má hráč na sobě
   Widget _buildEquippedItems() {
     final List allEqpAble = _profileData!['all_items_eqp_able'] ?? [];
@@ -310,9 +329,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Card(
           color: Colors.blueGrey.shade50,
           child: ListTile(
-            // TADY PŘIDÁVÁME KLIKNUTÍ
             onTap: () => _handleEquipToggle(item['item_id'], item['name'], 'equipped'),
-            leading: CircleAvatar(child: Text(item['item_img_ozn'].toString().substring(0, 2).toUpperCase())),
+            // TADY JE ZMĚNA: Používáme novou funkci na obrázky
+            leading: _buildItemIcon(item['item_img_ozn'].toString()),
             title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('${item['category']} | DMG: ${item['dmg_avg']} | Armor: ${item['armor']}'),
             trailing: const Icon(Icons.shield, color: Colors.blue),
@@ -322,7 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-// Vykreslení věcí, které leží v batohu
+  // Vykreslení věcí, které leží v batohu
   Widget _buildInventoryItems() {
     final List allEqpAble = _profileData!['all_items_eqp_able'] ?? [];
     final inventory = allEqpAble.where((item) => item['item_status'] == 'inventory').toList();
@@ -335,11 +354,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: inventory.map((item) {
         return Card(
           child: ListTile(
-            // TADY PŘIDÁVÁME KLIKNUTÍ
             onTap: () => _handleEquipToggle(item['item_id'], item['name'], 'inventory'),
-            leading: CircleAvatar(child: Text(item['item_img_ozn'].toString().substring(0, 2).toUpperCase())),
+            // TADY JE ZMĚNA: Používáme novou funkci na obrázky
+            leading: _buildItemIcon(item['item_img_ozn'].toString()),
             title: Text(item['name']),
-            subtitle: Text('Lvl req: ${item['lvl_req']} | Klikni pro nasazení'), // Menší textová nápověda
+            subtitle: Text('Lvl req: ${item['lvl_req']} | Klikni pro nasazení'), 
             trailing: Text('${item['price_ks']}g', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
           ),
         );
@@ -359,7 +378,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: materials.map((item) {
         return Card(
           child: ListTile(
-            leading: CircleAvatar(backgroundColor: Colors.brown.shade200, child: const Icon(Icons.build)),
+            // TADY JE ZMĚNA: Používáme novou funkci na obrázky (místo původní ikony kladiva)
+            leading: _buildItemIcon(item['item_img_ozn'].toString()),
             title: Text(item['name']),
             subtitle: Text('Kategorie: ${item['category']}'),
             trailing: Text('x${item['amount']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

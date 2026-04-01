@@ -61,17 +61,17 @@ flutter:
   assets:
     # Pomlčka musí mít před sebou přesně 4 mezery, následovaná jednou mezerou a cestou
     - assets/
-    - assets/bg
-    - assets/bg/dungeons
-    - assets/bg/profile
-    - assets/enemies
-    - assets/enemies/boss
-    - assets/enemies/mobs
-    - assets/enemies/voids
-    - assets/icons
-    - assets/items
-    - assets/maps
-    - assets/profile
+    - assets/bg/
+    - assets/bg/dungeons/
+    - assets/bg/profile/
+    - assets/enemies/
+    - assets/enemies/boss/
+    - assets/enemies/mobs/
+    - assets/enemies/voids/
+    - assets/icons/
+    - assets/items/
+    - assets/maps/
+    - assets/profile/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
