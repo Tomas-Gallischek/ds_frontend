@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
 
 void main() {
@@ -6,19 +7,14 @@ void main() {
 }
 
 class DungeonStepsApp extends StatelessWidget {
-  const DungeonStepsApp({super.key});
+  const DungeonStepsApp({super.key}); // <-- Změna zde: super parametr
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Dungeon Steps',
-      debugShowCheckedModeBanner: false, // Skryje ten otravný "DEBUG" nápis vpravo nahoře
-      theme: ThemeData(
-        // Tady později nasadíme tvůj připravený vizuální styl
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      // Zatím zde dáme jen zástupnou obrazovku, v dalším kroku ji nahradíme Loginem
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.darkTheme, 
       home: const LoginScreen(),
     );
   }
