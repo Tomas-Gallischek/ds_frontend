@@ -66,5 +66,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+    <string>Dungeon Steps potřebuje přístup ke tvým krokům, aby tvůj hrdina mohl získávat zkušenosti z tvé reálné chůze.</string>
+    
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>Dungeon Steps potřebuje oprávnění pro správnou synchronizaci tvého pohybu s hrou.</string>
 </dict>
 </plist>
