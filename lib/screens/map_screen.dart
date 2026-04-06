@@ -26,8 +26,8 @@ class MapScreen extends StatelessWidget {
       body: InteractiveViewer(
         constrained: false, // DŮLEŽITÉ: Dovolí mapě přetéct přes okraje obrazovky
         boundaryMargin: EdgeInsets.zero, // Zabrání hráči odscrollovat úplně mimo mapu do prázdna
-        minScale: 0.5, // Jak moc může hráč mapu oddálit (zmenšit)
-        maxScale: 3.0, // Jak moc může hráč mapu přiblížit (zvětšit)
+        minScale: 0.1, // Jak moc může hráč mapu oddálit (zmenšit)
+        maxScale: 6.0, // Jak moc může hráč mapu přiblížit (zvětšit)
         
         // Stack nám umožní později pokládat ikony lokací přesně na obrázek
 child: Stack(
@@ -40,8 +40,8 @@ child: Stack(
             
             // 2. VRSTVA: Náš první dungeon
             Positioned(
-              top: 400,  // Osa Y: Vzdálenost od horního okraje mapy v pixelech
-              left: 300, // Osa X: Vzdálenost od levého okraje mapy v pixelech
+              top: 800,  // Osa Y: Vzdálenost od horního okraje mapy v pixelech
+              left: 2075, // Osa X: Vzdálenost od levého okraje mapy v pixelech
               
               // GestureDetector zachytává dotyky prstem na mapě
               child: GestureDetector(
@@ -62,22 +62,12 @@ child: Stack(
                     // dát zase Image.asset('assets/ikona_dungeonu.png')
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(), // Poloprůhledný černý podklad pro lepší viditelnost
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.redAccent, width: 2),
-                      ),
-                      child: const Icon(Icons.castle, color: Colors.redAccent, size: 40),
-                    ),
-                    const SizedBox(height: 4),
-                    
-                    // Jmenovka lokace s lehkým podkladem pro lepší čitelnost
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      color: Colors.black54,
-                      child: const Text(
-                        'Opuštěná pevnost',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      // OPRAVA 2: Vynucená velikost ikony, aby se vešla do kolečka
+                      child: Image.asset(
+                        'assets/maps/dungeon_icons/temny_hvozd_icon.png',
+                        width: 200,  // Uprav velikost podle potřeby
+                        height: 200, // Uprav velikost podle potřeby
+                        fit: BoxFit.contain, // Contain zajistí, že se obrázek smrskne/zvětší tak, aby byl celý vidět
                       ),
                     ),
                   ],
