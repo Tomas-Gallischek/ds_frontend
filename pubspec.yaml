@@ -65,21 +65,41 @@ flutter:
   assets:
     # Pomlčka musí mít před sebou přesně 4 mezery, následovaná jednou mezerou a cestou
     - assets/
-    - assets/logo.png
-    - assets/login/bg_dungeon_steps.png
+    - assets/app_icon.png
+
     - assets/bg/
     - assets/bg/dungeons/
     - assets/bg/profile/
+
+    - assets/efects/
+
     - assets/enemies/
     - assets/enemies/boss/
+    - assets/enemies/mini_boss/
     - assets/enemies/mobs/
-    - assets/enemies/voids/
+    - assets/enemies/vortex_guardiens/
+
     - assets/icons/
+
     - assets/items/
+    - assets/items/amulet/
+    - assets/items/armor/
+    - assets/items/boots/
+    - assets/items/helmet/
+    - assets/items/material/
+    - assets/items/pet/
+    - assets/items/quest/
+    - assets/items/ring/
+    - assets/items/talisman/
+    - assets/items/weapons/
+
+    - assets/login/
+
     - assets/maps/
     - assets/maps/dungeon_icons/
-    - assets/profile/
 
+    - assets/profile/
+    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
@@ -105,3 +125,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Přidej tento blok úplně na konec pubspec.yaml
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/app_icon.png" # Cesta k tvému novému čtvercovému obrázku
+  min_sdk_android: 21 # Zajišťuje kompatibilitu se staršími Androidy

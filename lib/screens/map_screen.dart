@@ -27,14 +27,14 @@ class MapScreen extends StatelessWidget {
         constrained: false, // DŮLEŽITÉ: Dovolí mapě přetéct přes okraje obrazovky
         boundaryMargin: EdgeInsets.zero, // Zabrání hráči odscrollovat úplně mimo mapu do prázdna
         minScale: 0.1, // Jak moc může hráč mapu oddálit (zmenšit)
-        maxScale: 6.0, // Jak moc může hráč mapu přiblížit (zvětšit)
+        maxScale: 1.0, // Jak moc může hráč mapu přiblížit (zvětšit)
         
         // Stack nám umožní později pokládat ikony lokací přesně na obrázek
 child: Stack(
           children: [
             // 1. VRSTVA: Samotné pozadí mapy (tvůj oceán)
             Image.asset(
-              'assets/maps/map_background.png',
+              'assets/maps/zakladni_tabor.png',
               fit: BoxFit.none, 
             ),
             
@@ -68,6 +68,7 @@ child: Stack(
                         width: 200,  // Uprav velikost podle potřeby
                         height: 200, // Uprav velikost podle potřeby
                         fit: BoxFit.contain, // Contain zajistí, že se obrázek smrskne/zvětší tak, aby byl celý vidět
+                        opacity: const AlwaysStoppedAnimation(0.7), // Můžeme přidat trochu průhlednosti pro lepší vizuální efekt
                       ),
                     ),
                   ],
