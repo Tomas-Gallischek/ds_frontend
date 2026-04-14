@@ -4,12 +4,14 @@ class DsEquipmentSlot extends StatelessWidget {
   final String? itemImg;
   final String rarity;
   final double size;
+  final int? amount; // NOVÉ: Počet kusů
 
   const DsEquipmentSlot({
     super.key,
     this.itemImg,
     this.rarity = 'basic',
     this.size = 85,
+    this.amount, // NOVÉ
   });
 
   @override
@@ -29,13 +31,29 @@ class DsEquipmentSlot extends StatelessWidget {
             width: size * 0.85,
             height: size * 0.85,
             decoration: BoxDecoration(
-              color: Colors.black.withAlpha(102), // 0.4 opacity
+              color: Colors.black.withAlpha(102),
               borderRadius: BorderRadius.circular(size * 0.1),
             ),
           ),
           if (itemImg != null)
             Image.asset(itemImg!, width: size * 0.7, height: size * 0.7, fit: BoxFit.contain),
           Image.asset(framePath, width: size, height: size, fit: BoxFit.cover),
+          
+          // NOVÉ: Odznak s počtem kusů (ukáže se jen pokud je jich víc než 1)
+          if (amount != null && amount! > 1)
+            Positioned(
+              bottom: 4,
+              right: 6,
+              child: Text(
+                "$amount",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 4, offset: Offset(1, 1))],
+                ),
+              ),
+            ),
         ],
       ),
     );

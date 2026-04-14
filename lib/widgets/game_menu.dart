@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ds_frontend/screens/profile_screen.dart';
-import 'package:ds_frontend/screens/shop_screen.dart';
 import 'package:ds_frontend/screens/map_screen.dart';
 import '../screens/steps_screen.dart';
 
@@ -68,8 +67,6 @@ class GameMenu extends StatelessWidget {
         if (isReady) {
           if (title == 'PROFIL') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
-          } else if (title == 'OBCHOD') {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
           } else if (title == 'MAPA') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MapScreen())); // Nový přesun!
           } else if (title == 'KROKY') {

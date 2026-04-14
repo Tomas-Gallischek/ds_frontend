@@ -4,6 +4,9 @@ import '../widgets/game_menu.dart';
 import '../widgets/ds_top_bar.dart';
 import '../widgets/ds_equipment_slot.dart';
 import '../widgets/ds_attribute_table.dart';
+import '../services/api_service.dart';
+import '../models/player_profile.dart';
+import 'inventory_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,19 +16,46 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  PlayerProfile? _profile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  // Načtení skutečných dat z tvého Djanga
+  Future<void> _fetchProfile() async {
+    setState(() => _isLoading = true);
+    final data = await ApiService().getPlayerProfile();
+    if (mounted) {
+      setState(() {
+        _profile = data;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Definujeme pevnou, "referenční" velikost, kterou FittedBox automaticky naporcuje dle displeje
-    const double itemSize = 85.0; 
-    
+    // Referenční velikost pro FittedBox (ten se postará o zbytek)
+    const double itemSize = 85.0;
+
+    if (_isLoading || _profile == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppTheme.accentGold)),
+      );
+    }
+
     return Scaffold(
-      appBar: const DsTopBar(
-        username: "Gallis",
-        level: 12,
-        gold: 1540,
-        dungeonTokens: 2,
-        xpProgress: 0.65, 
-        avatarImg: 'assets/profile/avatar_default.png',
+      appBar: DsTopBar(
+        username: _profile!.username,
+        level: _profile!.lvl,
+        gold: _profile!.gold,
+        dungeonTokens: _profile!.dungeonTokens,
+        xpProgress: _profile!.xpProgress,
+        avatarImg: 'assets/profile/${_profile!.avatar}.png',
       ),
       endDrawer: const GameMenu(),
       body: Stack(
@@ -33,9 +63,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // 1. Pozadí
           Positioned.fill(
             child: Image.asset(
-              'assets/bg/bg_dungeon_steps.png', // Uprav cestu dle svého
+              'assets/bg/bg_dungeon_steps.png',
               fit: BoxFit.cover,
-              color: Colors.black.withAlpha(153), // 0.6 opacity
+              color: Colors.black.withAlpha(160),
               colorBlendMode: BlendMode.darken,
             ),
           ),
@@ -48,100 +78,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        
-                        // JMÉNO HRÁČE
-                        Text(
-                          "GALLIS", 
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 28),
-                        ),
-                        
-                        // HP a MANA
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.favorite, color: Colors.red, size: 18),
-                            const SizedBox(width: 5),
-                            const Text("1.250", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(width: 25),
-                            const Icon(Icons.auto_awesome, color: Colors.blue, size: 18),
-                            const SizedBox(width: 5),
-                            const Text("450", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 20),
 
-                        // --- SKÁLOVATELNÝ INVENTÁRNÍ KŘÍŽ (U-Layout) ZDE ZMĚNA ---
-                        // fittedBox vezme celý tento kontejner a smrskne ho dle šířky displeje
+                        // --- ŠKÁLOVATELNÝ INVENTÁŘ (Mřížka 4x4 logika) ---
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10.0),
                           child: FittedBox(
-                            fit: BoxFit.contain, // Contain zajistí, že se smrskne na šířku
+                            fit: BoxFit.contain,
                             child: SizedBox(
-                              // Celková referenční šířka = 4x itemSize (včetně těch spodních rohů)
-                              width: itemSize * 4, 
-                              height: itemSize * 3, // Výška = 3x itemSize
-                              child: Stack(
+                              width: itemSize * 4,
+                              child: Column(
                                 children: [
-                                  // LEVÝ SLOUPEC (3 itemy: Helma, Brnění, Boty)
-                                  const Positioned(
-                                    left: 0,
-                                    top: 0,
-                                    child: Column(
-                                      children: [
-                                        DsEquipmentSlot(rarity: 'basic', size: itemSize),
-                                        DsEquipmentSlot(itemImg: 'assets/items/armor/kosile.png', rarity: 'basic', size: itemSize),
-                                        DsEquipmentSlot(rarity: 'basic', size: itemSize), // Boty (Roh)
-                                      ],
-                                    ),
-                                  ),
-                                  
-                                  // PRAVÝ SLOUPEC (3 itemy: Amulet, Prsten, Pet)
-                                  const Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    child: Column(
-                                      children: [
-                                        DsEquipmentSlot(rarity: 'epic', size: itemSize),
-                                        DsEquipmentSlot(rarity: 'legendary', size: itemSize),
-                                        DsEquipmentSlot(rarity: 'rare', size: itemSize), // Pet (Roh)
-                                      ],
-                                    ),
+                                  // Řada 1: Helma | Jméno (přes 2 sloty) | Amulet
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const DsEquipmentSlot(rarity: 'basic', size: itemSize),
+                                      SizedBox(
+                                        width: itemSize * 2,
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              _profile!.username.toUpperCase(),
+                                              style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 24),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(Icons.favorite, color: Colors.red, size: 14),
+                                                const SizedBox(width: 4),
+                                                Text("${_profile!.hpActual}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                const SizedBox(width: 12),
+                                                const Icon(Icons.auto_awesome, color: Colors.blue, size: 14),
+                                                const SizedBox(width: 4),
+                                                Text("${_profile!.mana}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 5),
+                                          ],
+                                        ),
+                                      ),
+                                      const DsEquipmentSlot(rarity: 'epic', size: itemSize),
+                                    ],
                                   ),
 
-                                  // CENTRÁLNÍ ČÁST (Profilovka 2x2 + Spodní 2 itemy)
-                                  Positioned(
-                                    left: itemSize, // Odsazeno o 1 item zleva
-                                    top: 0,
-                                    child: SizedBox(
-                                      width: itemSize * 2,
-                                      height: itemSize * 3,
-                                      child: Column(
+                                  // Střední část: Brnění | Profilovka (2x2) | Prsten
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Column(
                                         children: [
-                                          // Centrální Profilovka (2x2 itemSize)
-                                          Container(
-                                            width: itemSize * 2,
-                                            height: itemSize * 2,
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.panelDark,
-                                              border: Border.all(color: AppTheme.panelWood, width: 3),
-                                              image: const DecorationImage(
-                                                image: AssetImage('assets/profile/avatar_default.png'),
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                          // Spodní řada pod profilovkou (Zbraň, Talisman)
-                                          const Row(
-                                            mainAxisSize: MainAxisSize.min, // Zabraňuje roztahování
-                                            children: [
-                                              DsEquipmentSlot(itemImg: 'assets/items/weapons/rezavy_nuz.png', rarity: 'rare', size: itemSize),
-                                              DsEquipmentSlot(rarity: 'basic', size: itemSize),
-                                            ],
-                                          ),
+                                          const DsEquipmentSlot(itemImg: 'assets/items/armor/kosile.png', rarity: 'basic', size: itemSize),
+                                          const DsEquipmentSlot(rarity: 'basic', size: itemSize), // Boty (levý bok)
                                         ],
                                       ),
-                                    ),
+                                      // Centrální 2x2 Profilovka
+                                      Container(
+                                        width: itemSize * 2,
+                                        height: itemSize * 2,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.panelDark,
+                                          border: Border.all(color: AppTheme.panelWood, width: 3),
+                                          image: DecorationImage(
+                                            image: AssetImage('assets/profile/${_profile!.avatar}.png'),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Column(
+                                        children: [
+                                          const DsEquipmentSlot(rarity: 'legendary', size: itemSize),
+                                          const DsEquipmentSlot(rarity: 'rare', size: itemSize), // Pet (pravý bok)
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Spodní řada (Uzavření "Účka"): Boty | Zbraň | Talisman | Pet
+                                  // Pozn: Pro absolutní symetrii dáváme Boty a Peta do spodní řady
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const DsEquipmentSlot(rarity: 'basic', size: itemSize), // Spodní roh L
+                                      DsEquipmentSlot(itemImg: 'assets/items/weapons/rezavy_nuz.png', rarity: 'rare', size: itemSize),
+                                      const DsEquipmentSlot(rarity: 'basic', size: itemSize),
+                                      const DsEquipmentSlot(rarity: 'rare', size: itemSize), // Spodní roh R
+                                    ],
                                   ),
                                 ],
                               ),
@@ -151,31 +174,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                         const SizedBox(height: 30),
 
-                        // TABULKA ATRIBUTŮ (Škálovatelná)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: DsAttributeTable(),
+                        // --- TABULKA ATRIBUTŮ (Reálná data) ---
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: DsAttributeTable(profile: _profile!),
                         ),
-                        
+
                         const SizedBox(height: 40),
                       ],
                     ),
                   ),
                 ),
 
-                // SPODNÍ TLAČÍTKA INVENTÁŘE
+                // SPODNÍ NAVIGACE INVENTÁŘE
                 Container(
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(127), // 0.5 opacity
+                    color: Colors.black.withAlpha(150),
                     border: const Border(top: BorderSide(color: AppTheme.panelWood, width: 2)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildMenuBtn(Icons.shield, "Vybavení"),
-                      _buildMenuBtn(Icons.auto_fix_high, "Materiály"),
-                      _buildMenuBtn(Icons.healing, "Spotřební"),
+                      _buildInventoryBtn(context, Icons.shield, "Vybavení", 'equip'),
+                      _buildInventoryBtn(context, Icons.auto_fix_high, "Materiály", 'material'),
+                      _buildInventoryBtn(context, Icons.healing, "Spotřební", 'useable'),
                     ],
                   ),
                 ),
@@ -187,13 +210,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuBtn(IconData icon, String label) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: AppTheme.accentGold),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-      ],
+  Widget _buildInventoryBtn(BuildContext context, IconData icon, String label, String type) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InventoryScreen(
+              title: label,
+              filterCategory: type,
+              allItems: [], // Zde později napojíme seznam itemů z _profile
+            ),
+          ),
+        );
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppTheme.accentGold, size: 28),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ],
+      ),
     );
   }
 }

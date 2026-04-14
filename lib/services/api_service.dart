@@ -1,29 +1,33 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart'; // Přidáno pro debugPrint
+import 'package:flutter/foundation.dart';
+import '../models/player_profile.dart'; // Ujisti se, že model existuje
 
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api'; 
 
+  // Pomocná metoda pro získání tokenu (aby se kód neopakoval)
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
   // --- LOGIN ---
   Future<bool> login(String username, String password) async {
-    final url = Uri.parse('$baseUrl/login_view/'); // Upraveno dle tvého views.py
-    
+    final url = Uri.parse('$baseUrl/login_view/'); 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
+        body: jsonEncode({'username': username, 'password': password}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data.containsKey('token')) {
-          await _saveToken(data['token']);
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', data['token']);
           return true;
         }
       }
@@ -33,6 +37,42 @@ class ApiService {
       return false;
     }
   }
+
+Future<PlayerProfile?> getPlayerProfile() async {
+    final token = await _getToken();
+    if (token == null) {
+      debugPrint('Žádný token nenalezen, uživatel není přihlášen.');
+      return null;
+    }
+
+    final url = Uri.parse('$baseUrl/profile/');
+    
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json', 
+          'Authorization': 'Token $token'
+        },
+      );
+      
+      debugPrint('USPĚŠNĚ PŘIHLÁŠENO'); // Zjistíme, jestli to je 404, 500, atd.
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return PlayerProfile.fromJson(data);
+      } else {
+        // TADY UVIDÍME CO PŘESNĚ DJANGO ŘÍKÁ!
+        debugPrint('Chyba serveru: ${response.body}'); 
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Kritická chyba spojení: $e');
+      return null;
+    }
+  }
+
+
 
   // --- REGISTRACE ---
   Future<bool> register(String username, String password, String email, String role, String gender) async {
@@ -76,41 +116,6 @@ class ApiService {
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
-  }
-
-  // --- ZÍSKÁNÍ PROFILU ---
-  Future<Map<String, dynamic>?> getProfile() async {
-    final token = await getToken();
-    
-    // Pokud token nemáme, uživatel není přihlášen
-    if (token == null) {
-      debugPrint('Žádný token nenalezen.');
-      return null; 
-    }
-
-    final url = Uri.parse('$baseUrl/profile/'); // Cesta k tvému view v Djangu
-    
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          // Takto se posílá ověření u Django REST Frameworku
-          'Authorization': 'Token $token', 
-        },
-      );
-
-      if (response.statusCode == 200) {
-        // Převedeme JSON text z backendu na Dart Map (slovník)
-        return jsonDecode(response.body); 
-      } else {
-        debugPrint('Chyba načítání profilu: Backend vrátil kód ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('Chyba při stahování profilu: $e');
-      return null;
-    }
   }
 
 
@@ -320,6 +325,5 @@ class ApiService {
       return null;
     }
   }
-
 
 }

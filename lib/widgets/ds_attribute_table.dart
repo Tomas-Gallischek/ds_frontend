@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'ds_panel.dart';
+import '../models/player_profile.dart'; // Přidán import tvého modelu
 
 class DsAttributeTable extends StatelessWidget {
-  const DsAttributeTable({super.key});
+  final PlayerProfile profile; // Nyní tabulka vyžaduje data hráče
+
+  const DsAttributeTable({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -13,33 +16,36 @@ class DsAttributeTable extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // LEVÝ SLOUPEC: Zobrazujeme skutečné hodnoty z databáze
               Expanded(
                 child: Column(
                   children: [
-                    _buildSFRow("Síla", "452"),
-                    _buildSFRow("Obratnost", "120"),
-                    _buildSFRow("Inteligence", "85"),
+                    _buildSFRow("Síla", "${profile.strength}"),
+                    _buildSFRow("Obratnost", "${profile.dexterity}"),
+                    _buildSFRow("Inteligence", "${profile.intelligence}"),
                   ],
                 ),
               ),
               const SizedBox(width: 20),
+              // PRAVÝ SLOUPEC
               Expanded(
                 child: Column(
                   children: [
-                    _buildSFRow("Vitalita", "380"),
-                    _buildSFRow("Štěstí", "154"),
-                    _buildSFRow("Preciznost", "92"),
+                    _buildSFRow("Vitalita", "${profile.vitality}"),
+                    _buildSFRow("Štěstí", "${profile.luck}"),
+                    _buildSFRow("Preciznost", "${profile.precision}"),
                   ],
                 ),
               ),
             ],
           ),
           const Divider(color: AppTheme.panelWood, height: 25),
+          // BOJOVÉ STATISTIKY
           Row(
             children: [
-              Expanded(child: _buildSFRow("Poškození", "210-250", color: Colors.redAccent)),
+              Expanded(child: _buildSFRow("Poškození", "${profile.dmgMin}-${profile.dmgMax}", color: Colors.redAccent)),
               const SizedBox(width: 20),
-              Expanded(child: _buildSFRow("Brnění", "1.250", color: Colors.blueAccent)),
+              Expanded(child: _buildSFRow("Brnění", "${profile.armor}", color: Colors.blueAccent)),
             ],
           )
         ],

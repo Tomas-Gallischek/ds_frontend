@@ -1,11 +1,11 @@
-import 'dart:async'; // Přidán import pro Timer
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ds_frontend/services/api_service.dart';
-import 'package:ds_frontend/screens/fight_screen.dart';
+import '../services/api_service.dart';
+import '../models/player_profile.dart';
+// import 'package:ds_frontend/screens/fight_screen.dart'; // Odkomentuj, až budeš mít připraveno
 
 class DungeonScreen extends StatefulWidget {
   final int dungeonId;
-
   const DungeonScreen({super.key, required this.dungeonId});
 
   @override
@@ -16,16 +16,12 @@ class _DungeonScreenState extends State<DungeonScreen> {
   final ApiService _apiService = ApiService();
   
   bool _isLoading = true;
-  bool _isStartingFight = false;
+  bool _isStartingFight = false; // Již se používá na tlačítku
   
-  Map<String, dynamic>? _dungeonData;
-  Map<String, dynamic>? _profileData;
+  PlayerProfile? _profile; 
 
-  // Nastavení posuvníku (slideru)
-  double _selectedMinutes = 1.0; 
-  final int _energyPerMinute = 1; // Cena energie za 1 minutu průzkumu
-
-  // Proměnné pro systém "Zaneprázdněn do"
+  double _selectedMinutes = 1.0; // Již se používá v posuvníku
+  final int _energyPerMinute = 1;
   DateTime? _busyUntil;
   Timer? _countdownTimer;
 
@@ -37,248 +33,158 @@ class _DungeonScreenState extends State<DungeonScreen> {
 
   @override
   void dispose() {
-    _countdownTimer?.cancel(); // Důležité: Zrušení časovače při odchodu z obrazovky
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
-  // Načte data o dungeonu i o hráči (kvůli energy_points a busy_until)
   Future<void> _loadAllData() async {
-    final dData = await _apiService.getDungeonDetails(widget.dungeonId);
-    final pData = await _apiService.getProfile();
-    
-    if (!mounted) return;
+    setState(() => _isLoading = true);
+    final profile = await _apiService.getPlayerProfile();
 
-    setState(() {
-      _dungeonData = dData;
-      _profileData = pData;
-      
-      // Vytáhnutí času busy_until, pokud existuje
-      if (pData != null && pData['busy_until'] != null) {
-        _busyUntil = DateTime.tryParse(pData['busy_until']);
-        // Pokud je čas v budoucnosti, spustíme vizuální odpočet
-        if (_busyUntil != null && _busyUntil!.isAfter(DateTime.now())) {
-          _startCountdown();
-        } else {
-          _busyUntil = null; // Pokud čas už vypršel, smažeme ho
-        }
-      }
-      
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _profile = profile;
+        _busyUntil = _profile?.busyUntil;
+        _isLoading = false;
+      });
+      if (_busyUntil != null) _startCountdown();
+    }
   }
 
-  // Funkce pro aktualizaci UI každou vteřinu, dokud čas nevyprší
   void _startCountdown() {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      
-      if (_busyUntil != null && _busyUntil!.isAfter(DateTime.now())) {
-        setState(() {}); // Překreslení UI každou vteřinu pro aktualizaci textu odpočtu
-      } else {
-        setState(() {
-          _busyUntil = null; // Čas vypršel, hráč je volný
-        });
+      if (_busyUntil == null || DateTime.now().isAfter(_busyUntil!)) {
         timer.cancel();
+        _loadAllData();
+      } else {
+        setState(() {}); // Vynutí překreslení zbývajícího času
       }
     });
   }
 
+  // Cvičná funkce pro start výpravy
   Future<void> _startFight() async {
-    int? baseId = _dungeonData?['dungeon_base_id'];
-    int currentEnergy = _profileData?['energy_points'] ?? 0;
-    int requiredEnergy = _selectedMinutes.toInt() * _energyPerMinute;
-
-    // 1) Kontrola, zda má hráč dostatek energie
-    if (currentEnergy < requiredEnergy) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Máš málo energie na tak dlouhý průzkum!'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    if (baseId == null) return;
-
     setState(() => _isStartingFight = true);
 
-    // 2) Odeslání API s navolenou hodnotou jako 3. argumentem
-    final turnLogs = await _apiService.initFight(baseId, "dungeon", _selectedMinutes.toInt());
+    // Zde později napojíš API: await _apiService.initFight(...)
+    await Future.delayed(const Duration(seconds: 1)); 
 
-    if (!mounted) return;
-    setState(() => _isStartingFight = false);
-
-    if (turnLogs != null && turnLogs.isNotEmpty) {
-      // SOUBOJ ÚSPĚŠNÝ, MÁME DATA - JEDEME ANIMOVAT!
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => FightScreen(turnLogs: turnLogs)),
-      ).then((_) {
-        // Po návratu z FightScreen (např. když souboj skončí), znovu načteme profil
-        // Hráč by měl mít nastavený nový "busy_until" z backendu
-        setState(() => _isLoading = true);
-        _loadAllData();
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chyba při zahájení souboje.'), backgroundColor: Colors.red),
-      );
+    if (mounted) {
+      setState(() => _isStartingFight = false);
+      // Přesměrování do souboje
+      // Navigator.push(context, MaterialPageRoute(builder: (context) => FightScreen(...)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: Colors.redAccent)),
-      );
+    if (_isLoading || _profile == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.red)));
     }
 
-    // Výpočty pro UI ohledně energie
-    int currentEnergy = _profileData?['energy_points'] ?? 0;
-    int requiredEnergy = _selectedMinutes.toInt() * _energyPerMinute;
-    bool hasEnoughEnergy = currentEnergy >= requiredEnergy;
-
-    // --- LOGIKA PRO ZANEPRÁZDNĚNÍ ---
-    bool isPlayerBusy = _busyUntil != null && _busyUntil!.isAfter(DateTime.now());
-    String remainingTimeStr = "";
+    final bool isPlayerBusy = _busyUntil != null && DateTime.now().isBefore(_busyUntil!);
+    final int requiredEnergy = (_selectedMinutes * _energyPerMinute).toInt();
+    final bool hasEnoughEnergy = _profile!.energyPoints >= requiredEnergy;
     
-    if (isPlayerBusy) {
-      Duration diff = _busyUntil!.difference(DateTime.now());
-      String minutes = diff.inMinutes.toString().padLeft(2, '0');
-      String seconds = (diff.inSeconds % 60).toString().padLeft(2, '0');
-      remainingTimeStr = "$minutes:$seconds";
-    }
-
-    // Tlačítko může být aktivní, jen když není zaneprázdněn, má energii a zrovna nenačítá
-    bool canStartButton = hasEnoughEnergy && !isPlayerBusy && !_isStartingFight;
-
-    String bgImageName = _dungeonData!['background_img'] ?? 'bg_default_dungeon';
-    String dungeonName = _dungeonData!['name'] ?? 'Neznámý dungeon';
-    String description = _dungeonData!['description'] ?? 'Temnota pohlcuje všechno světlo...';
+    // Zjistíme, jestli tlačítko může být aktivní
+    final bool canStartButton = !isPlayerBusy && hasEnoughEnergy && !_isStartingFight;
 
     return Scaffold(
-      extendBodyBehindAppBar: true, 
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text("Dungeon #${widget.dungeonId}"),
+        backgroundColor: Colors.black,
       ),
-      body: Stack(
-        fit: StackFit.expand,
+      body: Column(
         children: [
-          // Pozadí
-          Image.asset(
-            'assets/bg/dungeons/$bgImageName.png',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey.shade900),
+          // Ukazatel energie a goldů nahoře
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatInfo(Icons.bolt, "${_profile!.energyPoints}", Colors.yellow),
+                _buildStatInfo(Icons.monetization_on, "${_profile!.gold}", Colors.amber),
+              ],
+            ),
           ),
-          Container(color: Colors.black.withValues(alpha: 0.6)),
+          
+          const Spacer(),
+          
+          // Informace uprostřed
+          Text(
+            "Průzkum Dungeonu",
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 20),
+          
+          // Posuvník času (Zabrání varování unused_field)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: Column(
+              children: [
+                Text("Délka výpravy: ${_selectedMinutes.toInt()} min"),
+                Slider(
+                  value: _selectedMinutes,
+                  min: 1,
+                  max: 10,
+                  divisions: 9,
+                  activeColor: Colors.red.shade800,
+                  inactiveColor: Colors.grey.shade800,
+                  onChanged: isPlayerBusy ? null : (val) {
+                    setState(() {
+                      _selectedMinutes = val;
+                    });
+                  },
+                ),
+                Text(
+                  "Cena: $requiredEnergy Energie",
+                  style: TextStyle(color: hasEnoughEnergy ? Colors.green : Colors.red),
+                ),
+              ],
+            ),
+          ),
 
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    dungeonName.toUpperCase(),
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.redAccent, letterSpacing: 2),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    description,
-                    style: const TextStyle(fontSize: 16, color: Colors.white70),
-                    textAlign: TextAlign.center,
-                  ),
-                  
-                  const Spacer(),
+          const Spacer(),
 
-                  // --- CHYTRÝ POSUVNÍK (SLIDER) ---
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: hasEnoughEnergy ? Colors.white24 : Colors.redAccent),
+          // Tlačítko pro vstup (Zabrání varování unused_field)
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: canStartButton ? _startFight : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isPlayerBusy 
+                    ? Colors.grey.shade700 
+                    : (hasEnoughEnergy ? Colors.red.shade900 : Colors.grey.shade800),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isStartingFight 
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      isPlayerBusy 
+                          ? "HRDINA JE NA VÝPRAVĚ" 
+                          : (hasEnoughEnergy ? "VSTOUPIT" : "NEDOSTATEK ENERGIE"),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Musíš počkat ještě: ${_selectedMinutes.toInt()} min',
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        // Pokud je hráč na výpravě, slider zakážeme
-                        Slider(
-                          value: _selectedMinutes,
-                          min: 1.0,
-                          max: 20.0,
-                          divisions: 19,
-                          label: '${_selectedMinutes.toInt()} min',
-                          activeColor: hasEnoughEnergy ? Colors.redAccent : Colors.red,
-                          inactiveColor: Colors.white24,
-                          onChanged: isPlayerBusy ? null : (value) {
-                            setState(() {
-                              _selectedMinutes = value;
-                            });
-                          },
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Energie: $currentEnergy / 200',
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            Text(
-                              'Cena: $requiredEnergy Energie',
-                              style: TextStyle(
-                                color: hasEnoughEnergy ? Colors.amber : Colors.redAccent,
-                                fontWeight: FontWeight.bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  
-                  // Tlačítko startu
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: canStartButton ? _startFight : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isPlayerBusy 
-                          ? Colors.grey.shade700 
-                          : (hasEnoughEnergy ? Colors.red.shade900 : Colors.grey.shade800),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: _isStartingFight 
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            isPlayerBusy 
-                                ? 'NA VÝPRAVĚ ($remainingTimeStr)' 
-                                : (hasEnoughEnergy ? 'VSTOUPIT DO DUNGEONU' : 'NEDOSTATEK ENERGIE'),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                          ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatInfo(IconData icon, String value, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 5),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+      ],
     );
   }
 }
