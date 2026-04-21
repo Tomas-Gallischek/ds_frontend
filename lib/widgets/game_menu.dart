@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ds_frontend/screens/profile_screen.dart';
-import 'package:ds_frontend/screens/map_screen.dart';
+import '../theme/app_theme.dart';
+import '../services/api_service.dart';
+import '../screens/login_screen.dart';
+import '../screens/profile_screen.dart';
+import '../screens/map_screen.dart';
 import '../screens/steps_screen.dart';
-
 
 class GameMenu extends StatelessWidget {
   const GameMenu({super.key});
@@ -10,37 +12,90 @@ class GameMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      // Drawer je ten samotný vysouvací panel
+      backgroundColor: AppTheme.bgDark,
       child: Column(
         children: [
-          // Hlavička menu (můžeš si sem později dát logo hry)
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.deepPurple, // Upravíme podle tvé vizuální identity
+          // STYLOVANÁ HLAVIČKA MENU
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(top: 60, bottom: 30),
+            decoration: const BoxDecoration(
+              color: AppTheme.panelDark,
+              border: Border(
+                bottom: BorderSide(color: AppTheme.panelWood, width: 3),
+              ),
+              // Můžeš zde později přidat vzor pergamenu nebo dřeva
             ),
-            child: Center(
-              child: Text(
-                'DUNGEON STEPS',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            child: Column(
+              children: [
+                const Icon(Icons.fort, color: AppTheme.accentGold, size: 50),
+                const SizedBox(height: 10),
+                Text(
+                  'DUNGEON STEPS',
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        fontSize: 24,
+                        color: AppTheme.accentGold,
+                        letterSpacing: 2,
+                      ),
+                ),
+                Text(
+                  'HLAVNÍ MENU',
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 10,
+                    letterSpacing: 4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // SEZNAM POLOŽEK
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(color: AppTheme.panelWood.withAlpha(100), width: 1),
+                ),
+              ),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                children: [
+                  _buildRPGItem(context, 'PROFIL', Icons.person, const ProfileScreen()),
+                  _buildRPGItem(context, 'TRÉNINK HRDINY', Icons.directions_run, const StepsScreen()),
+                  _buildRPGItem(context, 'MAPA', Icons.map, const MapScreen()),
+                  
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Divider(color: AppTheme.panelWood, thickness: 1),
+                  ),
+                  
+                  _buildRPGItem(context, 'ŽEBŘÍČEK', Icons.leaderboard, null),
+                  _buildRPGItem(context, 'NASTAVENÍ', Icons.settings, null),
+                ],
               ),
             ),
           ),
-          
-          // Seznam tlačítek v požadovaném pořadí.
-          // Využíváme Expanded a ListView, aby šlo menu scrollovat, pokud se nevejde na menší displej.
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _buildMenuItem(context, 'PROFIL', Icons.person, isReady: true),
-                _buildMenuItem(context, 'MAPA', Icons.map, isReady: true),
-                _buildMenuItem(context, 'KROKY', Icons.directions_walk, isReady: true),
-                _buildMenuItem(context, 'ÚKOLY', Icons.assignment),
-                _buildMenuItem(context, 'SCHOPNOSTI', Icons.star),
-                _buildMenuItem(context, 'DRUŽINA', Icons.group),
-                _buildMenuItem(context, 'ŽEBŘÍČEK', Icons.leaderboard),
-                _buildMenuItem(context, 'NASTAVENÍ', Icons.settings),
-              ],
+
+          // TLAČÍTKO ODHLÁŠENÍ (Sestup na konec menu)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(
+                top: BorderSide(color: AppTheme.panelWood, width: 2),
+              ),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.logout, color: Colors.redAccent),
+              title: const Text(
+                'OPUSTIT HRU',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              onTap: () => _handleLogout(context),
             ),
           ),
         ],
@@ -48,38 +103,54 @@ class GameMenu extends StatelessWidget {
     );
   }
 
-  // Pomocná funkce pro vykreslení jednoho řádku v menu
-  Widget _buildMenuItem(BuildContext context, String title, IconData icon, {bool isReady = false}) {
+  // Pomocná funkce pro RPG položku menu
+  Widget _buildRPGItem(BuildContext context, String title, IconData icon, Widget? targetScreen) {
+    bool isReady = targetScreen != null;
+
     return ListTile(
-      leading: Icon(icon, color: isReady ? Colors.deepPurple : Colors.grey),
+      leading: Icon(
+        icon,
+        color: isReady ? AppTheme.accentGold : Colors.grey.shade700,
+      ),
       title: Text(
         title,
         style: TextStyle(
-          color: isReady ? Colors.black : Colors.grey, 
+          color: isReady ? AppTheme.textLight : Colors.grey.shade700,
           fontWeight: FontWeight.bold,
-          fontSize: 16,
+          letterSpacing: 1.1,
         ),
       ),
-    onTap: () {
-        Navigator.pop(context); // Zavře šuplík
-
+      onTap: () {
+        Navigator.pop(context); // Zavře Drawer
         if (isReady) {
-          if (title == 'PROFIL') {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
-          } else if (title == 'MAPA') {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MapScreen())); // Nový přesun!
-          } else if (title == 'KROKY') {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const StepsScreen())); // Nový přesun!
-          }
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => targetScreen),
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Obrazovka $title se zatím připravuje!'), duration: const Duration(seconds: 1)),
+            const SnackBar(
+              content: Text('Tato síň je zatím uzavřena...'),
+              backgroundColor: AppTheme.panelDark,
+            ),
           );
         }
       },
     );
   }
 
+  // Logika odhlášení
+  Future<void> _handleLogout(BuildContext context) async {
+    // 1. Smažeme token přes ApiService
+    await ApiService().logout();
 
+    // 2. Přesun na LoginScreen a vymazání historie navigace
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
 }
-

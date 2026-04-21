@@ -335,4 +335,10 @@ Future<PlayerProfile?> getPlayerProfile() async {
     }
   }
 
+  // --- LOGOUT ---
+    Future<void> logout() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token'); // Nemilosrdně vymažeme token z paměti
+  }
 }
+

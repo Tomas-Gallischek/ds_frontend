@@ -89,90 +89,87 @@ class InventoryScreen extends StatelessWidget {
   // ==========================================
   // VYSKAKOVACÍ OKNO S DETAILEM PŘEDMĚTU
   // ==========================================
-  void _showItemDetails(BuildContext context, BaseItem item) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.panelDark,
-      isScrollControlled: true, // Umožní oknu přizpůsobit se obsahu
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min, // Zabere jen tolik místa, kolik potřebuje
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. HLAVIČKA (Obrázek, Název, Rarita)
-              Row(
-                children: [
-                  DsEquipmentSlot(
-                    itemImg: 'assets/items/${item.category == 'weapon' ? 'weapons' : item.category == 'armor' ? 'armor' : 'materials'}/${item.itemImgOzn}.png',
-                    rarity: item.rarity,
-                    size: 70,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name, 
-                          style: TextStyle(
-                            fontSize: 22, 
-                            fontWeight: FontWeight.bold,
-                            color: _getRarityColor(item.rarity),
-                          )
-                        ),
-                        Text(
-                          '${item.category.toUpperCase()} | Pož. Úroveň: ${item.lvlReq}', 
-                          style: const TextStyle(color: Colors.grey, fontSize: 13)
-                        ),
-                      ],
+void _showItemDetails(BuildContext context, BaseItem item) {
+  bool isProcessing = false;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppTheme.panelDark,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // HLAVIČKA A POPIS (Zkráceno pro přehlednost)
+                Row(
+                  children: [
+                    DsEquipmentSlot(
+                      itemImg: 'assets/items/${item.category == 'weapon' ? 'weapons' : item.category == 'armor' ? 'armor' : 'accessories'}/${item.itemImgOzn}.png',
+                      rarity: item.rarity,
+                      size: 70,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              
-              // 2. POPIS
-              if (item.description.isNotEmpty) ...[
-                Text(
-                  item.description, 
-                  style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic)
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _getRarityColor(item.rarity))),
+                          Text('Pož. Úroveň: ${item.lvlReq}', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 15),
+                const Divider(color: AppTheme.panelWood, height: 30),
+
+                // STATY (Filtrované)
+                if (item is EqpItem) ..._buildItemStats(item),
+
+                const SizedBox(height: 25),
+
+                // AKCE S POJISTKOU
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (item is EqpItem)
+                      SizedBox(
+                        height: 45,
+                        child: ElevatedButton.icon(
+                          onPressed: isProcessing 
+                            ? null 
+                            : () async {
+                                setModalState(() => isProcessing = true);
+                                // Voláme nasazení
+                                await _equipItem(context, item);
+                                // Navigator.pop se děje uvnitř _equipItem
+                              },
+                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentGold),
+                          icon: isProcessing 
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                            : const Icon(Icons.shield, color: Colors.black),
+                          label: Text(
+                            isProcessing ? "NASAZUJI..." : "NASADIT", 
+                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
               ],
-              
-              const Divider(color: AppTheme.panelWood, thickness: 2),
-
-              // 3. VÝPIS STATŮ (Zde filtrujeme prázdné hodnoty)
-              ..._buildItemStats(item),
-
-              const SizedBox(height: 25),
-              
-              // 4. TLAČÍTKA AKCÍ
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  if (item is EqpItem) // Tlačítko nasadit se ukáže jen u výbavy
-                    ElevatedButton.icon(
-                      onPressed: () => _equipItem(context, item), // <--- ZDE VOLÁME NAŠI NOVOU FUNKCI
-                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentGold),
-                      icon: const Icon(Icons.shield, color: Colors.black),
-                      label: const Text("Nasadit", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                    ),
-                ], // <--- TADY CHYBĚLA HRANATÁ ZÁVORKA (ukončuje seznam tlačítek v Row)
-              ),   // <--- A TADY KULATÁ ZÁVORKA (ukončuje celý Row)
-
-              const SizedBox(height: 10), // Rezerva pro spodní okraj telefonu
-            ],
-          ),
-        );  
-      }
-    );
-  }
+            ),
+          );
+        }
+      );
+    }
+  );
+}
 
   // ==========================================
   // POMOCNÉ FUNKCE PRO VYKRESLENÍ STATŮ
@@ -233,7 +230,7 @@ class InventoryScreen extends StatelessWidget {
   }
 
 // --- FUNKCE PRO NASAZENÍ ITEMU ---
-  void _equipItem(BuildContext context, EqpItem item) async {
+  Future<void> _equipItem(BuildContext context, EqpItem item) async {
     // 1. Zobrazíme rychlý vizuální feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Nasazuji: ${item.name}...'), duration: const Duration(seconds: 1)),
