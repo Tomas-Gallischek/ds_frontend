@@ -108,11 +108,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               children: [
                                                 const Icon(Icons.favorite, color: Colors.red, size: 14),
                                                 const SizedBox(width: 4),
-                                                Text("${_profile!.hpActual}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                Text("${_profile!.hpMax}", style: const TextStyle(fontWeight: FontWeight.bold)),
                                                 const SizedBox(width: 12),
                                                 const Icon(Icons.auto_awesome, color: Colors.blue, size: 14),
                                                 const SizedBox(width: 4),
-                                                Text("${_profile!.mana}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                Text("${_profile!.manaMax}", style: const TextStyle(fontWeight: FontWeight.bold)),
                                               ],
                                             ),
                                             const SizedBox(height: 5),
@@ -210,19 +210,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInventoryBtn(BuildContext context, IconData icon, String label, String type) {
+    Widget _buildInventoryBtn(BuildContext context, IconData icon, String label, String type) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async { // <--- PŘIDEJ async
+        final result = await Navigator.push( // <--- PŘIDEJ final result = await ...
           context,
           MaterialPageRoute(
             builder: (context) => InventoryScreen(
               title: label,
               filterCategory: type,
-              allItems: [], // Zde později napojíme seznam itemů z _profile
+              allItems: _profile!.allItems, 
             ),
           ),
         );
+
+        // <--- PŘIDEJ TUTO PODMÍNKU
+        // Pokud inventář vrátil "true" (došlo ke změně výbavy), načti znovu profil
+        if (result == true && context.mounted) {
+          _fetchProfile(); 
+        }
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

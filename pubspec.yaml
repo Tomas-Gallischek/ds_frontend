@@ -86,9 +86,8 @@ flutter:
     - assets/items/armor/
     - assets/items/boots/
     - assets/items/helmet/
-    - assets/items/material/
+    - assets/items/materials/
     - assets/items/pet/
-    - assets/items/quest/
     - assets/items/ring/
     - assets/items/talisman/
     - assets/items/weapons/

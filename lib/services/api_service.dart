@@ -88,8 +88,17 @@ Future<PlayerProfile?> getPlayerProfile() async {
           'email': email,
           'role': role,
           'gender': gender,
-        }),
+        }),        
       );
+
+      debugPrint('Odpověď serveru při registraci: ${response.statusCode} - ${response.body}'); // Přidáno pro debugování
+      debugPrint('Odeslaná data při registraci: ${jsonEncode({
+          'username': username,
+          'password': password,
+          'email': email,
+          'role': role,
+          'gender': gender,
+        })}'); // Přidáno pro debugování
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);

@@ -33,7 +33,6 @@ class GameMenu extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 _buildMenuItem(context, 'PROFIL', Icons.person, isReady: true),
-                _buildMenuItem(context, 'OBCHOD', Icons.store, isReady: true),
                 _buildMenuItem(context, 'MAPA', Icons.map, isReady: true),
                 _buildMenuItem(context, 'KROKY', Icons.directions_walk, isReady: true),
                 _buildMenuItem(context, 'ÚKOLY', Icons.assignment),

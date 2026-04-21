@@ -20,9 +20,9 @@ class DsAttributeTable extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    _buildSFRow("Síla", "${profile.strength}"),
-                    _buildSFRow("Obratnost", "${profile.dexterity}"),
-                    _buildSFRow("Inteligence", "${profile.intelligence}"),
+                    _buildSFRow("Síla", "${profile.strMax}"),
+                    _buildSFRow("Obratnost", "${profile.dexMax}"),
+                    _buildSFRow("Inteligence", "${profile.intMax}"),
                   ],
                 ),
               ),
@@ -31,9 +31,9 @@ class DsAttributeTable extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    _buildSFRow("Vitalita", "${profile.vitality}"),
-                    _buildSFRow("Štěstí", "${profile.luck}"),
-                    _buildSFRow("Preciznost", "${profile.precision}"),
+                    _buildSFRow("Vitalita", "${profile.vitMax}"),
+                    _buildSFRow("Štěstí", "${profile.luckMax}"),
+                    _buildSFRow("Preciznost", "${profile.precMax}"),
                   ],
                 ),
               ),
