@@ -14,8 +14,9 @@ class BlacksmithScreen extends StatefulWidget {
 
 class _BlacksmithScreenState extends State<BlacksmithScreen> {
   PlayerProfile? _profile;
-  List<Map<String, dynamic>> _recipes = []; // Zde budou uloženy všechny recepty
+  List<Map<String, dynamic>> _recipes = []; 
   bool _isLoading = true;
+  bool _isUpgrading = false; // <--- PŘIDÁNO: Zámek proti spamu
   
   EqpItem? _selectedItem;
 
@@ -25,11 +26,9 @@ class _BlacksmithScreenState extends State<BlacksmithScreen> {
     _fetchData();
   }
   
-  // Načteme profil i recepty SOUČASNĚ
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     
-    // Čekáme, až se stáhnou obě věci najednou pro větší rychlost
     final results = await Future.wait([
       ApiService().getPlayerProfile(),
       ApiService().getUpgradeRecipes(),
@@ -44,27 +43,24 @@ class _BlacksmithScreenState extends State<BlacksmithScreen> {
     }
   }
 
-  // --- ZÍSKÁNÍ RECEPTU PRO VYBRANÝ ITEM ---
   Map<String, dynamic>? _getCurrentRecipe(EqpItem item) {
     try {
-      // Hledáme recept pro správný typ itemu a na level (aktuální + 1)
       return _recipes.firstWhere((r) => 
         r['item_base_id'] == item.itemBaseId && 
         r['target_lvl'] == item.itemLvl + 1
       );
     } catch (e) {
-      return null; // Nenašlo to = item je na max levelu, nebo recept neexistuje
+      return null;
     }
   }
 
-  // --- KOLIK TOHOTO MATERIÁLU MÁ HRÁČ V BATOHU? ---
   int _getPlayerMaterialAmount(int materialBaseId) {
     if (_profile == null) return 0;
     try {
       final mat = _profile!.materialItems.firstWhere((m) => m.itemBaseId == materialBaseId);
       return mat.amount;
     } catch (e) {
-      return 0; // Pokud materiál vůbec nemá v batohu
+      return 0; 
     }
   }
 
@@ -80,6 +76,71 @@ class _BlacksmithScreenState extends State<BlacksmithScreen> {
       folder = 'armor';
     }
     return 'assets/items/$folder/${item.itemImgOzn}.png';
+  }
+
+  // --- POMOCNÝ WIDGET PRO VYKRESLENÍ JEDNOHO ŘÁDKU STATŮ ---
+  Widget _buildStatPreview(String label, String current, String next) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        children: [
+          Text("$label: $current", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward, color: Colors.green, size: 14),
+          const SizedBox(width: 8),
+          Text(next, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  // --- GENEROVÁNÍ NÁHLEDŮ PODLE KATEGORIE ---
+List<Widget> _generatePreviewStats(EqpItem item) {
+    List<Widget> stats = [];
+    debugPrint("Generuji náhled pro ${item.category} s itemLvl ${item.itemLvl} a koeficientem ${item.weaponDmgUpKoef}");
+    if (item.category == 'weapon') {
+      // ZMĚNĚNO NA .ceil()
+      int nextMin = (item.dmgMin * (1 + item.weaponDmgUpKoef)).ceil();
+      int nextMax = (item.dmgMax * (1 + item.weaponDmgUpKoef)).ceil();
+      stats.add(_buildStatPreview("Poškození", "${item.dmgMin}-${item.dmgMax}", "$nextMin-$nextMax"));
+    } 
+    else if (item.category == 'armor') {
+      // ZMĚNĚNO NA .ceil()
+      int nextArmor = (item.armor * (1 + item.armorArmorUpKoef)).ceil();
+      int nextHp = (item.plusHp * (1 + item.armorHpUpKoef)).ceil();
+      stats.add(_buildStatPreview("Brnění", "${item.armor}", "$nextArmor"));
+      if (item.plusHp > 0 || nextHp > 0) {
+        stats.add(_buildStatPreview("Zdraví", "${item.plusHp}", "$nextHp"));
+      }
+    } 
+    else if (item.category == 'helmet') {
+      // ZMĚNĚNO NA .ceil()
+      int nextArmor = (item.armor * (1 + item.helmetArmorUpKoef)).ceil();
+      stats.add(_buildStatPreview("Brnění", "${item.armor}", "$nextArmor"));
+    } 
+    else if (item.category == 'boots') {
+      // ZMĚNĚNO NA .ceil()
+      int nextArmor = (item.armor * (1 + item.bootsArmorUpKoef)).ceil();
+      double nextAs = item.attackSpeedBoots + item.bootsAttackSpeedUpKoef; // Sčítání zůstává
+      stats.add(_buildStatPreview("Brnění", "${item.armor}", "$nextArmor"));
+      if (item.attackSpeedBoots > 0 || nextAs > 0) {
+        stats.add(_buildStatPreview("Rychlost útoku", "${item.attackSpeedBoots}", nextAs.toStringAsFixed(2)));
+      }
+    } 
+    else if (item.category == 'amulet') {
+      int currentAtr = item.allAtrBonusAmulet ?? 0;
+      // ZMĚNĚNO NA .ceil()
+      int nextAtr = currentAtr + item.amuletAtrUpKoef.ceil(); 
+      stats.add(_buildStatPreview("Všechny Atributy", "$currentAtr", "$nextAtr"));
+    } 
+    else if (item.category == 'ring') {
+      int currentAtr = item.allAtrBonusRing ?? 0;
+      // ZMĚNĚNO NA .ceil()
+      int nextAtr = currentAtr + item.ringAtrUpKoef.ceil();
+      stats.add(_buildStatPreview("Všechny Atributy", "$currentAtr", "$nextAtr"));
+    }
+
+    return stats;
   }
 
   @override
@@ -151,11 +212,9 @@ class _BlacksmithScreenState extends State<BlacksmithScreen> {
     );
   }
 
-Widget _buildActiveForge(EqpItem item) {
-    // 1. Získáme recept
+  Widget _buildActiveForge(EqpItem item) {
     final recipe = _getCurrentRecipe(item);
     
-    // 2. Ošetření, pokud už předmět nejde vylepšit
     if (recipe == null) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -167,19 +226,10 @@ Widget _buildActiveForge(EqpItem item) {
       );
     }
 
-    // --- TADY JE TO KOUZLO: TAHÁME KOEFICIENT Z RECEPTU, NE Z ITEMU ---
-    final double dmgKoef = (recipe['weapon_dmg_up_koef'] as num?)?.toDouble() ?? 0.0;
-    
-    // Výpočet nových statů
-    final int nextMin = (item.dmgMin * (1 + dmgKoef)).round();
-    final int nextMax = (item.dmgMax * (1 + dmgKoef)).round();
-
-    // 3. Vykreslení konkrétního receptu
     final int goldCost = recipe['gold_cost'] ?? 0;
-    final int chance = ((recipe['chance'] ?? 0.0) * 100).toInt(); // 0.95 -> 95
+    final int chance = ((recipe['chance'] ?? 0.0) * 100).toInt(); 
     final List<dynamic> requiredMaterials = recipe['materials'] ?? [];
 
-    // Zjistíme, jestli má hráč dostatek všeho (surovin i zlaťáků)
     bool hasEnoughGold = _profile!.gold >= goldCost;
     bool hasAllMaterials = true;
 
@@ -194,7 +244,6 @@ Widget _buildActiveForge(EqpItem item) {
                 children: [
                   DsEquipmentSlot(itemImg: _getImgPath(item), rarity: item.rarity, size: 90),
                   const SizedBox(height: 8),
-                  // POUŽIJEME dmgKoef z receptu pro zobrazení procent
                   Text("Vylepšení na: +${item.itemLvl + 1}", 
                     style: const TextStyle(color: AppTheme.accentGold, fontWeight: FontWeight.bold)),
                 ],
@@ -208,29 +257,9 @@ Widget _buildActiveForge(EqpItem item) {
                     const Text("NÁHLED VYLEPŠENÍ", style: TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     
-                    // ZOBRAZÍME REÁLNÝ VÝPOČET POŠKOZENÍ (jen u zbraní)
-                    if (item.category == 'weapon')
-                      Row(
-                        children: [
-                          Text("Poškození: ${item.dmgMin}-${item.dmgMax}", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward, color: Colors.green, size: 14),
-                          const SizedBox(width: 8),
-                          Text("$nextMin-$nextMax", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
-                        ],
-                      ),
-                      
-                    // (Volitelně si sem můžeš pak přidat i brnění)
-                    if (item.armor > 0)
-                      Row(
-                        children: [
-                          Text("Brnění: ${item.armor}", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward, color: Colors.green, size: 14),
-                          const SizedBox(width: 8),
-                          Text("${(item.armor * (1 + dmgKoef)).round()}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
-                        ],
-                      ),
+                    // --- ZDE VOLÁME NAŠI NOVOU GENERUJÍCÍ FUNKCI ---
+                    ..._generatePreviewStats(item),
+                    
                   ],
                 ),
               ),
@@ -239,7 +268,6 @@ Widget _buildActiveForge(EqpItem item) {
           
           const Spacer(),
 
-          // DYNAMICKÉ MATERIÁLY (Tato část zůstává stejná)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -267,7 +295,6 @@ Widget _buildActiveForge(EqpItem item) {
 
           const SizedBox(height: 15),
 
-          // INFO A TLAČÍTKO (Tato část zůstává stejná)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -279,16 +306,57 @@ Widget _buildActiveForge(EqpItem item) {
                 ],
               ),
               ElevatedButton(
-                onPressed: (hasEnoughGold && hasAllMaterials) 
-                  ? () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vylepšuji...')));
+                // Tlačítko je aktivní, jen pokud máš zlato, materiály a ZÁROVEŇ zrovna neprobíhá vylepšování
+                onPressed: (hasEnoughGold && hasAllMaterials && !_isUpgrading) 
+                  ? () async {
+                      // 1. Zamkneme tlačítko
+                      setState(() => _isUpgrading = true);
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kovám předmět... 🔨'), duration: Duration(seconds: 1)),
+                      );
+
+                      // 2. Zavoláme API (pozor, používáme itemId, ne itemBaseId)
+                      bool success = await ApiService().upgradeItem(item.itemId!, item.itemBaseId!);
+
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Vylepšení úspěšné (OPRAVIT - UKAZUJE SE I PŘI NEZDARU! 🎉'), backgroundColor: Colors.green),
+                        );
+                        
+                        // 3. Stáhneme nová data (profil i recepty)
+                        await _fetchData();
+                        
+                        // 4. Přelinkujeme vybraný předmět, aby se rovnou ukázaly nové staty!
+                        if (_profile != null && mounted) {
+                          setState(() {
+                            try {
+                              _selectedItem = _profile!.eqpItems.firstWhere((e) => e.itemId == item.itemId);
+                            } catch (e) {
+                              _selectedItem = null; // Kdyby se něco pokazilo, vyprázdníme kovadlinu
+                            }
+                          });
+                        }
+                      } else if (mounted) {
+                         ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chyba při vylepšování! Zkus to znovu.'), backgroundColor: Colors.red),
+                        );
+                      }
+
+                      // 5. Odemkneme tlačítko
+                      if (mounted) {
+                        setState(() => _isUpgrading = false);
+                      }
                     }
                   : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.accentGold,
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
-                child: const Text("VYLEPŠIT", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                // Zobrazíme buď text, nebo kolečko načítání, pokud se zrovna kove
+                child: _isUpgrading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                  : const Text("VYLEPŠIT", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -297,7 +365,20 @@ Widget _buildActiveForge(EqpItem item) {
     );
   }
 
-  Widget _buildItemsGrid(List<BaseItem> items, {required bool isEquip}) {
+Widget _buildItemsGrid(List<BaseItem> items, {required bool isEquip}) {
+    // TOTO ZABRÁNÍ TEMNÉMU PRÁZDNÉMU MÍSTU, KDYŽ SE NIC NENAČTE
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Center(
+          child: Text(
+            isEquip ? "Žádné vybavení nenalezeno." : "Sklad surovin je prázdný.", 
+            style: TextStyle(color: Colors.grey.shade600, fontStyle: FontStyle.italic)
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -312,9 +393,18 @@ Widget _buildActiveForge(EqpItem item) {
         bool isSelected = _selectedItem?.itemId == (item is EqpItem ? item.itemId : -1);
 
         return GestureDetector(
+          // TATO VLASTNOST ZAJISTÍ, ŽE FUNGUJE KLIK I DO "PRŮHLEDNÉHO" PRÁZDNA
+          behavior: HitTestBehavior.translucent, 
+          
           onTap: () {
             if (isEquip) {
-              setState(() => _selectedItem = item as EqpItem);
+              debugPrint("=== KLIKNUTÍ NA ITEM ===");
+              debugPrint("1. Item: ${item.name} | Lvl: ${item.itemLvl}");
+              debugPrint("2. Koeficient zbraně: ${(item as EqpItem).weaponDmgUpKoef}");
+              debugPrint("3. Celkový počet receptů v paměti: ${_recipes.length}");
+              debugPrint("========================");
+
+              setState(() => _selectedItem = item);
             }
           },
           child: Container(
@@ -325,7 +415,6 @@ Widget _buildActiveForge(EqpItem item) {
             child: Stack(
               children: [
                 DsEquipmentSlot(itemImg: _getImgPath(item), rarity: item.rarity, size: double.infinity, amount: item.amount),
-                // Zobrazíme u ikony aktuální level itemu (např. +1)
                 if (isEquip)
                   Positioned(
                     top: 2, left: 4,

@@ -16,6 +16,13 @@ abstract class BaseItem {
   final int priceAll;
   final int itemLvl;
   final double weaponDmgUpKoef;
+  final double armorArmorUpKoef;
+  final double armorHpUpKoef;
+  final double helmetArmorUpKoef;
+  final double bootsArmorUpKoef;
+  final double bootsAttackSpeedUpKoef;
+  final double amuletAtrUpKoef;
+  final double ringAtrUpKoef;
 
   BaseItem({
     required this.itemId,
@@ -32,6 +39,13 @@ abstract class BaseItem {
     required this.priceAll,
     required this.itemLvl,
     required this.weaponDmgUpKoef,
+    required this.armorArmorUpKoef,
+    required this.armorHpUpKoef,
+    required this.helmetArmorUpKoef,
+    required this.bootsArmorUpKoef,
+    required this.bootsAttackSpeedUpKoef,
+    required this.amuletAtrUpKoef,
+    required this.ringAtrUpKoef,
   });
 }
 
@@ -74,6 +88,13 @@ class EqpItem extends BaseItem {
     required super.priceAll,
     required super.itemLvl,
     required super.weaponDmgUpKoef,
+    required super.armorArmorUpKoef,
+    required super.armorHpUpKoef,
+    required super.helmetArmorUpKoef,
+    required super.bootsArmorUpKoef,
+    required super.bootsAttackSpeedUpKoef,
+    required super.amuletAtrUpKoef,
+    required super.ringAtrUpKoef,
     this.itemBonusy,
     required this.armor,
     this.dmgType,
@@ -133,7 +154,14 @@ class EqpItem extends BaseItem {
       petHpBonus: (json['pet_hp_bonus'] as num?)?.toInt(),
       petPrumSkodaBonus: (json['pet_prum_skoda_bonus'] as num?)?.toInt(),
       itemLvl: (json['item_lvl'] as num?)?.toInt() ?? 0,
-      weaponDmgUpKoef: (json['weapon_dmg_up_koef'] as num?)?.toDouble() ?? 0.0,
+      weaponDmgUpKoef: double.tryParse(json['weapon_dmg_up_koef']?.toString() ?? '') ?? 0.0,
+      armorArmorUpKoef: double.tryParse(json['armor_armor_up_koef']?.toString() ?? '') ?? 0.0,
+      armorHpUpKoef: double.tryParse(json['armor_hp_up_koef']?.toString() ?? '') ?? 0.0,
+      helmetArmorUpKoef: double.tryParse(json['helmet_armor_up_koef']?.toString() ?? '') ?? 0.0,
+      bootsArmorUpKoef: double.tryParse(json['boots_armor_up_koef']?.toString() ?? '') ?? 0.0,
+      bootsAttackSpeedUpKoef: double.tryParse(json['boots_attack_speed_up_koef']?.toString() ?? '') ?? 0.0,
+      amuletAtrUpKoef: double.tryParse(json['amulet_atr_up_koef']?.toString() ?? '') ?? 0.0,
+      ringAtrUpKoef: double.tryParse(json['ring_atr_up_koef']?.toString() ?? '') ?? 0.0,
     );
   }
 }
@@ -157,6 +185,13 @@ class MaterialItem extends BaseItem {
     required super.priceAll,
     required super.itemLvl,
     required super.weaponDmgUpKoef,
+    required super.armorArmorUpKoef,
+    required super.armorHpUpKoef,
+    required super.helmetArmorUpKoef,
+    required super.bootsArmorUpKoef,
+    required super.bootsAttackSpeedUpKoef,
+    required super.amuletAtrUpKoef,
+    required super.ringAtrUpKoef,
     required this.stackable,
   });
 
@@ -176,7 +211,14 @@ class MaterialItem extends BaseItem {
       priceAll: (json['price_all'] as num?)?.toInt() ?? 0,
       stackable: json['stackable'] ?? true,
       itemLvl: (json['item_lvl'] as num?)?.toInt() ?? 0,
-      weaponDmgUpKoef: (json['weapon_dmg_up_koef'] as num?)?.toDouble() ?? 0.0,
+      weaponDmgUpKoef: double.tryParse(json['weapon_dmg_up_koef']?.toString() ?? '') ?? 0.0,
+      armorArmorUpKoef: double.tryParse(json['armor_armor_up_koef']?.toString() ?? '') ?? 0.0,
+      armorHpUpKoef: double.tryParse(json['armor_hp_up_koef']?.toString() ?? '') ?? 0.0,
+      helmetArmorUpKoef: double.tryParse(json['helmet_armor_up_koef']?.toString() ?? '') ?? 0.0,
+      bootsArmorUpKoef: double.tryParse(json['boots_armor_up_koef']?.toString() ?? '') ?? 0.0,
+      bootsAttackSpeedUpKoef: double.tryParse(json['boots_attack_speed_up_koef']?.toString() ?? '') ?? 0.0,
+      amuletAtrUpKoef: double.tryParse(json['amulet_atr_up_koef']?.toString() ?? '') ?? 0.0,
+      ringAtrUpKoef: double.tryParse(json['ring_atr_up_koef']?.toString() ?? '') ?? 0.0,
     );
   }
 }

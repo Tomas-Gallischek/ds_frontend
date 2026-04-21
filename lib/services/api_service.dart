@@ -364,7 +364,36 @@ Future<PlayerProfile?> getPlayerProfile() async {
     return [];
   }
 
+// --- VYLEPŠENÍ PŘEDMĚTU V KOVÁRNĚ ---
+  Future<bool> upgradeItem(int itemId, int baseId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token == null) return false;
 
+      final response = await http.post(
+        Uri.parse('$baseUrl/item_upgrade/'), 
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json', // Nutné pro odesílání POST dat
+        },
+        body: json.encode({
+          'item_id': itemId, // Posíláme unikátní ID zbraně z inventáře
+          'base_id': baseId // Posíláme ID základního předmětu, protože v upgrade_items.py očekáváš oba parametry
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Chyba při vylepšování: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Chyba spojení při vylepšování: $e');
+      return false;
+    }
+  }
 
 
 
