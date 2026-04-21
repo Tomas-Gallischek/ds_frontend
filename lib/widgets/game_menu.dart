@@ -5,65 +5,45 @@ import '../screens/login_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/map_screen.dart';
 import '../screens/steps_screen.dart';
+import '../screens/blacksmith_screen.dart';
 
 class GameMenu extends StatelessWidget {
   const GameMenu({super.key});
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: AppTheme.bgDark,
       child: Column(
         children: [
-          // STYLOVANÁ HLAVIČKA MENU
+          // ... (Hlavička zůstává beze změny) ...
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 60, bottom: 30),
             decoration: const BoxDecoration(
               color: AppTheme.panelDark,
-              border: Border(
-                bottom: BorderSide(color: AppTheme.panelWood, width: 3),
-              ),
-              // Můžeš zde později přidat vzor pergamenu nebo dřeva
+              border: Border(bottom: BorderSide(color: AppTheme.panelWood, width: 3)),
             ),
             child: Column(
               children: [
                 const Icon(Icons.fort, color: AppTheme.accentGold, size: 50),
                 const SizedBox(height: 10),
-                Text(
-                  'DUNGEON STEPS',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontSize: 24,
-                        color: AppTheme.accentGold,
-                        letterSpacing: 2,
-                      ),
-                ),
-                Text(
-                  'HLAVNÍ MENU',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 10,
-                    letterSpacing: 4,
-                  ),
-                ),
+                Text('DUNGEON STEPS', style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 24, color: AppTheme.accentGold, letterSpacing: 2)),
+                Text('HLAVNÍ MENU', style: TextStyle(color: Colors.grey.shade500, fontSize: 10, letterSpacing: 4)),
               ],
             ),
           ),
 
-          // SEZNAM POLOŽEK
           Expanded(
             child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: AppTheme.panelWood.withAlpha(100), width: 1),
-                ),
-              ),
+              decoration: BoxDecoration(border: Border(right: BorderSide(color: AppTheme.panelWood.withAlpha(100), width: 1))),
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 children: [
                   _buildRPGItem(context, 'PROFIL', Icons.person, const ProfileScreen()),
-                  _buildRPGItem(context, 'TRÉNINK HRDINY', Icons.directions_run, const StepsScreen()),
-                  _buildRPGItem(context, 'MAPA', Icons.map, const MapScreen()),
+                  _buildRPGItem(context, 'KOVÁRNA', Icons.hardware, const BlacksmithScreen()), // <--- PŘIDÁNO: Tlačítko Kovárny
+                  _buildRPGItem(context, 'VÝPRAVA (MAPA)', Icons.map, const MapScreen()),
+                  _buildRPGItem(context, 'KROKY HODINY', Icons.directions_run, const StepsScreen()),
                   
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),

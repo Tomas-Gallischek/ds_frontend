@@ -14,6 +14,8 @@ abstract class BaseItem {
   final String rarity;
   final int priceKs;
   final int priceAll;
+  final int itemLvl;
+  final double weaponDmgUpKoef;
 
   BaseItem({
     required this.itemId,
@@ -28,6 +30,8 @@ abstract class BaseItem {
     required this.rarity,
     required this.priceKs,
     required this.priceAll,
+    required this.itemLvl,
+    required this.weaponDmgUpKoef,
   });
 }
 
@@ -68,6 +72,8 @@ class EqpItem extends BaseItem {
     required super.rarity,
     required super.priceKs,
     required super.priceAll,
+    required super.itemLvl,
+    required super.weaponDmgUpKoef,
     this.itemBonusy,
     required this.armor,
     this.dmgType,
@@ -126,6 +132,8 @@ class EqpItem extends BaseItem {
       petDmgBonus: (json['pet_dmg_bonus'] as num?)?.toInt(),
       petHpBonus: (json['pet_hp_bonus'] as num?)?.toInt(),
       petPrumSkodaBonus: (json['pet_prum_skoda_bonus'] as num?)?.toInt(),
+      itemLvl: (json['item_lvl'] as num?)?.toInt() ?? 0,
+      weaponDmgUpKoef: (json['weapon_dmg_up_koef'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -147,6 +155,8 @@ class MaterialItem extends BaseItem {
     required super.rarity,
     required super.priceKs,
     required super.priceAll,
+    required super.itemLvl,
+    required super.weaponDmgUpKoef,
     required this.stackable,
   });
 
@@ -165,6 +175,8 @@ class MaterialItem extends BaseItem {
       priceKs: (json['price_ks'] as num?)?.toInt() ?? 0,
       priceAll: (json['price_all'] as num?)?.toInt() ?? 0,
       stackable: json['stackable'] ?? true,
+      itemLvl: (json['item_lvl'] as num?)?.toInt() ?? 0,
+      weaponDmgUpKoef: (json['weapon_dmg_up_koef'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

@@ -340,5 +340,35 @@ Future<PlayerProfile?> getPlayerProfile() async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token'); // Nemilosrdně vymažeme token z paměti
   }
+// --- ZÍSKÁNÍ RECEPTŮ PRO KOVÁRNU ---
+  Future<List<Map<String, dynamic>>> getUpgradeRecipes() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token == null) return [];
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/get_all_upgrades/'), // Ujisti se, že toto odpovídá tvému urls.py na backendu
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 200) {
+        // Dekódování JSONu tak, aby správně fungovala čeština
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        // Vrátíme seznam receptů
+        return List<Map<String, dynamic>>.from(data['recipes'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('Chyba při načítání receptů: $e');
+    }
+    return [];
+  }
+
+
+
+
+
+
+
 }
 
