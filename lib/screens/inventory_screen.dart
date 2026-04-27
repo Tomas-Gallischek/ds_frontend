@@ -73,7 +73,16 @@ class InventoryScreen extends StatelessWidget {
                       onTap: () => _showItemDetails(context, item), // KLIKNUTÍ OTEVŘE DETAIL
                       child: DsEquipmentSlot(
                         // Ujisti se, že cesta k obrázkům odpovídá tvé složce
-                        itemImg: 'assets/items/${item.category == 'weapon' ? 'weapons' : item.category == 'armor' ? 'armor' : 'materials'}/${item.itemImgOzn}.png', 
+                        itemImg: 'assets/items/${
+                          item.category == 'weapon' ? 'weapons' :
+                          item.category == 'armor' ? 'armor' :
+                          item.category == 'helmet' ? 'helmet' :
+                          item.category == 'boots' ? 'boots' :
+                          item.category == 'amulet' ? 'amulet' :
+                          item.category == 'ring' ? 'ring' :
+                          item.category == 'talisman' ? 'talisman' :
+                          item.category == 'pet' ? 'pets' :
+                          item.category == 'material' ? 'materials' : 'unknown'}/${item.itemImgOzn}.png', 
                         rarity: item.rarity,
                         size: double.infinity, 
                         amount: item.amount,
