@@ -56,8 +56,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String folder = 'accessories';
     if (item.category == 'weapon') {
       folder = 'weapons';
-    } else if (['armor', 'helmet', 'boots'].contains(item.category)) {
+    }
+    else if (item.category == 'armor') {
       folder = 'armor';
+    }
+    else if (item.category == 'helmet') {
+      folder = 'helmet';
+    }
+    else if (item.category == 'boots') {
+      folder = 'boots';
+    }
+    else if (item.category == 'amulet') {
+      folder = 'amulet';
+    }
+    else if (item.category == 'ring') {
+      folder = 'ring';
+    }
+    else if (item.category == 'talisman') {
+      folder = 'talisman';
+    }
+    else if (item.category == 'pet') {
+      folder = 'pet';
     }
     return 'assets/items/$folder/${item.itemImgOzn}.png';
   }
@@ -86,6 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // --- CHYTRÝ VYKRESLOVAČ SLOTŮ (S možností kliknutí) ---
+// --- CHYTRÝ VYKRESLOVAČ SLOTŮ (S možností kliknutí a levelem) ---
   Widget _buildEquippedSlot(EqpItem? item, double size) {
     return GestureDetector(
       onTap: () {
@@ -93,10 +113,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _showItemDetails(context, item); // Pokud tu item je, otevřeme okno!
         }
       },
-      child: DsEquipmentSlot(
-        itemImg: _getImgPath(item),
-        rarity: item?.rarity ?? 'basic',
-        size: size,
+      child: Stack(
+        children: [
+          DsEquipmentSlot(
+            itemImg: _getImgPath(item),
+            rarity: item?.rarity ?? 'basic',
+            size: size,
+          ),
+          // Pokud předmět existuje, vykreslíme jeho level do rohu
+          if (item != null)
+            Positioned(
+              top: 12, 
+              right: 20,
+              child: Text(
+                "+${item.itemLvl}", 
+                style: TextStyle(
+                  color: item.rarity == 'legendary' ? Colors.deepPurple : item.rarity == 'epic' ? Colors.redAccent : item.rarity == 'rare' ? Colors.orange : Colors.white, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 20, 
+                  shadows: [Shadow(color: Colors.black, blurRadius: 4)]
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -350,6 +389,8 @@ void _showItemDetails(BuildContext context, EqpItem item) {
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _getRarityColor(item.rarity))),
                           Text('${item.category.toUpperCase()} | Pož. Úroveň: ${item.lvlReq}', 
                             style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                          Text("+${item.itemLvl}", style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 10, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
+
                         ],
                       ),
                     ),

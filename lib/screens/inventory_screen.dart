@@ -71,21 +71,40 @@ class InventoryScreen extends StatelessWidget {
                     
                     return GestureDetector(
                       onTap: () => _showItemDetails(context, item), // KLIKNUTÍ OTEVŘE DETAIL
-                      child: DsEquipmentSlot(
-                        // Ujisti se, že cesta k obrázkům odpovídá tvé složce
-                        itemImg: 'assets/items/${
-                          item.category == 'weapon' ? 'weapons' :
-                          item.category == 'armor' ? 'armor' :
-                          item.category == 'helmet' ? 'helmet' :
-                          item.category == 'boots' ? 'boots' :
-                          item.category == 'amulet' ? 'amulet' :
-                          item.category == 'ring' ? 'ring' :
-                          item.category == 'talisman' ? 'talisman' :
-                          item.category == 'pet' ? 'pets' :
-                          item.category == 'material' ? 'materials' : 'unknown'}/${item.itemImgOzn}.png', 
-                        rarity: item.rarity,
-                        size: double.infinity, 
-                        amount: item.amount,
+                      child: Stack(
+                        children: [
+                          DsEquipmentSlot(
+                            // Ujisti se, že cesta k obrázkům odpovídá tvé složce
+                            itemImg: 'assets/items/${
+                              item.category == 'weapon' ? 'weapons' :
+                              item.category == 'armor' ? 'armor' :
+                              item.category == 'helmet' ? 'helmet' :
+                              item.category == 'boots' ? 'boots' :
+                              item.category == 'amulet' ? 'amulet' :
+                              item.category == 'ring' ? 'ring' :
+                              item.category == 'talisman' ? 'talisman' :
+                              item.category == 'pet' ? 'pets' :
+                              item.category == 'material' ? 'materials' : 'unknown'}/${item.itemImgOzn}.png', 
+                            rarity: item.rarity,
+                            size: double.infinity, 
+                            amount: item.amount,
+                          ),
+                          // PŘIDÁNO: Zobrazení úrovně v rohu (pouze pro výbavu)
+                          if (item is EqpItem && item.itemLvl > 0)
+                            Positioned(
+                              top: 12, 
+                              right: 20,
+                              child: Text(
+                                "+${item.itemLvl}", 
+                                style: TextStyle(
+                                  color: item.rarity == 'legendary' ? Colors.deepPurple : item.rarity == 'epic' ? Colors.redAccent : item.rarity == 'rare' ? Colors.orange : Colors.white,
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 20, 
+                                  shadows: [Shadow(color: Colors.black, blurRadius: 4)]
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     );
                   },
@@ -115,7 +134,7 @@ void _showItemDetails(BuildContext context, BaseItem item) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // HLAVIČKA A POPIS (Zkráceno pro přehlednost)
+                // HLAVIČKA A POPIS
                 Row(
                   children: [
                     DsEquipmentSlot(
@@ -130,6 +149,9 @@ void _showItemDetails(BuildContext context, BaseItem item) {
                         children: [
                           Text(item.name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _getRarityColor(item.rarity))),
                           Text('Pož. Úroveň: ${item.lvlReq}', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                          // PŘIDÁNO: Zobrazení úrovně v detailu (pouze pro výbavu)
+                          if (item is EqpItem && item.itemLvl > 0)
+                             Text("+${item.itemLvl}", style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 10, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
                         ],
                       ),
                     ),

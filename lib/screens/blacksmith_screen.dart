@@ -54,14 +54,19 @@ class _BlacksmithScreenState extends State<BlacksmithScreen> {
     }
   }
 
-  int _getPlayerMaterialAmount(int materialBaseId) {
+int _getPlayerMaterialAmount(int materialBaseId) {
     if (_profile == null) return 0;
-    try {
-      final mat = _profile!.materialItems.firstWhere((m) => m.itemBaseId == materialBaseId);
-      return mat.amount;
-    } catch (e) {
-      return 0; 
+    
+    int totalAmount = 0;
+    
+    // Projdeme celý batoh a sečteme všechny platné stacky daného materiálu
+    for (var mat in _profile!.materialItems) {
+      if (mat.itemBaseId == materialBaseId && mat.amount > 0) {
+        totalAmount += mat.amount;
+      }
     }
+    
+    return totalAmount;
   }
 
   String _getImgPath(BaseItem item) {
@@ -72,8 +77,27 @@ class _BlacksmithScreenState extends State<BlacksmithScreen> {
     String folder = 'accessories';
     if (item.category == 'weapon') {
       folder = 'weapons';
-    } else if (['armor', 'helmet', 'boots'].contains(item.category)) {
+    }
+    else if (item.category == 'armor') {
       folder = 'armor';
+    }
+    else if (item.category == 'helmet') {
+      folder = 'helmet';
+    }
+    else if (item.category == 'boots') {
+      folder = 'boots';
+    }
+    else if (item.category == 'amulet') {
+      folder = 'amulet';
+    }
+    else if (item.category == 'ring') {
+      folder = 'ring';
+    }
+    else if (item.category == 'talisman') {
+      folder = 'talisman';
+    }
+    else if (item.category == 'pet') {
+      folder = 'pet';
     }
     return 'assets/items/$folder/${item.itemImgOzn}.png';
   }
@@ -163,8 +187,8 @@ List<Widget> _generatePreviewStats(EqpItem item) {
                     children: [
                       Positioned.fill(
                         child: Image.asset(
-                          'assets/bg/bg_dungeon_steps.png',
-                          fit: BoxFit.cover,
+                          'assets/bg/blacksmith/blacksmith_bg.png',
+                          fit: BoxFit.fill,
                           color: Colors.black.withAlpha(200),
                           colorBlendMode: BlendMode.darken,
                         ),
@@ -178,7 +202,10 @@ List<Widget> _generatePreviewStats(EqpItem item) {
                             _buildItemsGrid(_profile!.eqpItems, isEquip: true),
                             const SizedBox(height: 10),
                             _buildSectionHeader("Sklad Surovin", Icons.diamond),
-                            _buildItemsGrid(_profile!.materialItems, isEquip: false),
+                            _buildItemsGrid(
+                              _profile!.materialItems.where((m) => m.amount > 0).toList(), 
+                              isEquip: false
+                          ),
                           ],
                         ),
                       ),
@@ -245,7 +272,11 @@ List<Widget> _generatePreviewStats(EqpItem item) {
                   DsEquipmentSlot(itemImg: _getImgPath(item), rarity: item.rarity, size: 90),
                   const SizedBox(height: 8),
                   Text("Vylepšení na: +${item.itemLvl + 1}", 
-                    style: const TextStyle(color: AppTheme.accentGold, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                      color: item.rarity == 'legendary' ? Colors.deepPurple : item.rarity == 'epic' ? Colors.redAccent : item.rarity == 'rare' ? Colors.orange : Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(width: 20),
@@ -268,11 +299,13 @@ List<Widget> _generatePreviewStats(EqpItem item) {
           
           const Spacer(),
 
+// DYNAMICKÉ MATERIÁLY
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: requiredMaterials.map((mat) {
+              // TADY PŘIDÁME FILTR: .where((mat) => mat['amount'] > 0)
+              children: requiredMaterials.where((mat) => mat['amount'] > 0).map((mat) {
                 int needed = mat['amount'];
                 int owned = _getPlayerMaterialAmount(mat['material_base_id']);
                 bool enough = owned >= needed;
@@ -417,8 +450,17 @@ Widget _buildItemsGrid(List<BaseItem> items, {required bool isEquip}) {
                 DsEquipmentSlot(itemImg: _getImgPath(item), rarity: item.rarity, size: double.infinity, amount: item.amount),
                 if (isEquip)
                   Positioned(
-                    top: 2, left: 4,
-                    child: Text("+${item.itemLvl}", style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 10, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
+                    top: 10,
+                    right: 20,
+                    child: Text(
+                      "+${item.itemLvl}",
+                      style: TextStyle(
+                        color: item.rarity == 'legendary' ? Colors.deepPurple : item.rarity == 'epic' ? Colors.redAccent : item.rarity == 'rare' ? Colors.orange : Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                      ),
+                    ),
                   ),
               ],
             ),
